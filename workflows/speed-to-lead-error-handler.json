@@ -25,7 +25,30 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [680, 300],
-      "parameters": {}
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $env.TWILIO_ACCOUNT_SID }}/Messages.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "To",
+              "value": "={{ $env.BAPTISTE_PHONE }}"
+            },
+            {
+              "name": "From",
+              "value": "={{ $env.TWILIO_SENDER_ID }}"
+            },
+            {
+              "name": "Body",
+              "value": "={{ $json.fallback_sms }}"
+            }
+          ]
+        },
+        "options": {}
+      }
     }
   ],
   "connections": {
@@ -38,5 +61,8 @@
   },
   "settings": {
     "executionOrder": "v1"
+  },
+  "_setup_notes": {
+    "error_handler_setup": "After importing this workflow: 1) Create an n8n Basic Auth credential named 'Twilio Basic Auth' with Username=TWILIO_ACCOUNT_SID and Password=TWILIO_AUTH_TOKEN. 2) In the main workflow Settings > Error Workflow, select 'Speed to Lead — Error Handler'. 3) Set BAPTISTE_PHONE env var to Baptiste's mobile in E.164 format (+33XXXXXXXXX)."
   }
 }

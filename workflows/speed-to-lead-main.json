@@ -21,7 +21,7 @@
       "typeVersion": 2,
       "position": [460, 300],
       "parameters": {
-        "jsCode": "// TODO: Plan 03 — log raw payload + store in staticData for error recovery\nreturn $input.all();"
+        "jsCode": "// INGEST-03: Log raw payload for audit/debug\n// NOTIF-04 prep: Store last lead in staticData for error recovery\nconst lead = $input.first().json;\n\n// Log to n8n execution log (visible in Executions view for 7 days)\nconsole.log('RAW_LEAD:', JSON.stringify(lead));\n\n// Store in workflow static data so Error Handler workflow can recover it\n// This survives even if subsequent nodes fail\nconst staticData = $getWorkflowStaticData('global');\nstaticData.lastLead = JSON.stringify(lead);\nstaticData.lastLeadTime = new Date().toISOString();\n\n// Pass through unchanged — do not modify the payload\nreturn $input.all();"
       }
     },
     {

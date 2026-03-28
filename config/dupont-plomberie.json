@@ -1,21 +1,24 @@
 {
-  "_comment": "Per-client configuration for Speed to Lead. All sensitive values (google_key, API keys) must be stored as n8n environment variables and referenced from there — never stored in this file in plain text.",
+  "_comment": "Per-client configuration for Speed to Lead. Sensitive values (Twilio SID/token, google_key) must be stored as n8n environment variables. This file stores only non-sensitive values and the registry of required env var names.",
   "client_slug": "dupont-plomberie",
   "business_name": "Dupont Plomberie",
   "service_type": "plombier",
   "city": "Paris",
   "owner_phone": "+33600000000",
   "owner_email": "contact@dupont-plomberie.fr",
+  "brevo_sender_email": "no-reply@dupont-plomberie.fr",
   "callback_promise_minutes": 30,
+  "follow_up_delay_minutes": 45,
+  "follow_up_enabled": true,
   "active": true,
   "env_vars_required": {
-    "GOOGLE_KEY": "Shared secret from Google Ads Lead Form settings",
-    "TWILIO_ACCOUNT_SID": "From Twilio Console dashboard",
-    "TWILIO_AUTH_TOKEN": "From Twilio Console dashboard",
-    "TWILIO_SENDER_ID": "Alphanumeric sender ID — e.g. DupontPlomb (max 11 chars, pre-registered with Twilio France)",
-    "ANTHROPIC_API_KEY": "From console.anthropic.com > API Keys",
-    "BREVO_API_KEY": "From app.brevo.com > Settings > API Keys",
+    "DUPONT_GOOGLE_KEY": "Shared secret from Google Ads Lead Form settings for Dupont Plomberie",
+    "DUPONT_TWILIO_ACCOUNT_SID": "Twilio Account SID for Dupont Plomberie (from Twilio Console)",
+    "DUPONT_TWILIO_AUTH_TOKEN": "Twilio Auth Token for Dupont Plomberie (from Twilio Console)",
+    "DUPONT_TWILIO_SENDER_ID": "Alphanumeric sender ID for Dupont Plomberie — max 11 chars, e.g. DupontPlomb",
+    "ANTHROPIC_API_KEY": "Shared — from console.anthropic.com > API Keys",
+    "BREVO_API_KEY": "Shared — from app.brevo.com > Settings > API Keys",
     "BAPTISTE_PHONE": "Baptiste's mobile in E.164 format — receives error fallback SMS"
   },
-  "_rgpd_note": "RGPD pre-launch requirement: Lead Form must include a pre-unchecked consent checkbox: 'J accepte d etre contacte(e) par SMS par Dupont Plomberie concernant ma demande.' Consent must be collected before first production send."
+  "_rgpd_note": "Pre-launch requirement: Lead Form must include a pre-unchecked consent checkbox: 'J accepte d etre contacte(e) par SMS par Dupont Plomberie concernant ma demande.' Consent must be collected before first production send."
 }

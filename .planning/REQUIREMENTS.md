@@ -24,13 +24,13 @@
 
 - [x] **NOTIF-01**: Le dirigeant reçoit un SMS/WhatsApp avec les infos clés du lead (nom, demande, téléphone)
 - [x] **NOTIF-02**: La notification contient un lien `tel:` permettant de rappeler le prospect en un clic
-- [ ] **NOTIF-03**: Si le dirigeant n'a pas rappelé après un délai configurable, le prospect reçoit une relance automatique
+- [x] **NOTIF-03**: Si le dirigeant n'a pas rappelé après un délai configurable, le prospect reçoit une relance automatique
 - [x] **NOTIF-04**: En cas d'erreur du pipeline, Baptiste reçoit le lead brut en fallback
 
 ### Configuration
 
 - [x] **CONF-01**: Chaque client a sa propre configuration (nom entreprise, canaux, délais, type de service)
-- [ ] **CONF-02**: Un seul Core Workflow n8n partagé entre tous les clients (multi-tenant)
+- [x] **CONF-02**: Un seul Core Workflow n8n partagé entre tous les clients (multi-tenant)
 - [ ] **CONF-03**: Chaque client a une URL webhook unique par slug (`/webhook/dupont-plomberie`)
 
 ## v2 Requirements
@@ -75,10 +75,10 @@
 | RESP-05 | Phase 1 | Complete |
 | NOTIF-01 | Phase 1 | Complete |
 | NOTIF-02 | Phase 1 | Complete |
-| NOTIF-03 | Phase 2 | Pending |
+| NOTIF-03 | Phase 2 | Complete |
 | NOTIF-04 | Phase 1 | Complete |
 | CONF-01 | Phase 2 | Complete |
-| CONF-02 | Phase 2 | Pending |
+| CONF-02 | Phase 2 | Complete |
 | CONF-03 | Phase 2 | Pending |
 
 **Coverage:**

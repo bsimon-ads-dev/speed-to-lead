@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-follow-up-multi-tenant 02-01-PLAN.md — config schema locked with per-client Twilio prefix and follow-up fields
-last_updated: "2026-03-28T14:52:08.382Z"
+stopped_at: Completed 02-follow-up-multi-tenant 02-02-PLAN.md — Core Workflow parameterized with executeWorkflowTrigger and follow-up chain
+last_updated: "2026-03-28T14:56:00.415Z"
 last_activity: 2026-03-28
 progress:
   total_phases: 3
   completed_phases: 1
   total_plans: 10
-  completed_plans: 7
+  completed_plans: 8
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 ## Current Position
 
 Phase: 02 (follow-up-multi-tenant) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-03-28
 
@@ -59,6 +59,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-critical-path P05 | 2 | 2 tasks | 1 files |
 | Phase 01-critical-path P06 | 3 | 1 tasks | 1 files |
 | Phase 02-follow-up-multi-tenant P01 | 2 | 2 tasks | 2 files |
+| Phase 02-follow-up-multi-tenant P02 | 2 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -88,6 +89,9 @@ Recent decisions affecting current work:
 - [Phase 01-critical-path]: 01-06: 320-char limit on owner SMS (2 segments) — sufficient to include name + request snippet + tel: link
 - [Phase 02-follow-up-multi-tenant]: Per-client Twilio prefix (DUPONT_/MARTIN_) prevents credential collision when multiple clients share one n8n instance
 - [Phase 02-follow-up-multi-tenant]: follow_up_delay_minutes is per-client config — Core Workflow reads from payload, not hardcoded constants
+- [Phase 02-follow-up-multi-tenant]: 02-02: google_key validation removed from Core Workflow — moved to entry workflows (Plan 03) so Core Workflow is auth-agnostic
+- [Phase 02-follow-up-multi-tenant]: 02-02: client_config forwarded explicitly in Code nodes that rebuild $json — prevents client_config loss through field-reconstructing nodes
+- [Phase 02-follow-up-multi-tenant]: 02-02: Wait node placed immediately after owner SMS — follow-up delay starts from owner notification moment
 
 ### Pending Todos
 
@@ -100,6 +104,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T14:52:08.379Z
-Stopped at: Completed 02-follow-up-multi-tenant 02-01-PLAN.md — config schema locked with per-client Twilio prefix and follow-up fields
+Last session: 2026-03-28T14:56:00.411Z
+Stopped at: Completed 02-follow-up-multi-tenant 02-02-PLAN.md — Core Workflow parameterized with executeWorkflowTrigger and follow-up chain
 Resume file: None

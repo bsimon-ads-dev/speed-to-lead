@@ -84,7 +84,33 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [1340, 260],
-      "parameters": {}
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-api-key",
+              "value": "={{ $env.ANTHROPIC_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"model\": \"claude-haiku-4-5\",\n  \"max_tokens\": 200,\n  \"system\": \"Tu travailles pour {{ $env.BUSINESS_NAME }}, {{ $env.SERVICE_TYPE }} basé(e) à {{ $env.CITY }}.\\n\\nUn prospect vient de soumettre un formulaire de contact Google Ads.\\n\\nTa mission : rédiger UN SMS de confirmation en français.\\n\\nRègles STRICTES :\\n- Le SMS doit faire STRICTEMENT MOINS DE 160 caractères (espaces compris)\\n- Reformule en une phrase la demande spécifique du prospect (ce qu'il a écrit)\\n- Confirme qu'on le rappelle sous {{ $env.CALLBACK_MINUTES }} minutes\\n- N'invente AUCUN prix, délai exact, ni disponibilité non confirmée\\n- N'ajoute AUCUNE formule de politesse, signature, ou introduction\\n- Commence DIRECTEMENT par le contenu du SMS\\n\\nExemple acceptable (150 caractères) :\\n\\\"Bonjour Marie, votre fuite d'eau sous l'évier : notre plombier vous rappelle sous 30 minutes. Dupont Plomberie.\\\"\\n\\nExemple interdit (trop long, prix inventé) :\\n\\\"Bonjour Marie, nous avons bien reçu votre demande concernant une fuite d'eau sous votre évier de cuisine. Nous vous confirmons qu'un de nos plombiers qualifiés vous contactera dans les 30 prochaines minutes pour intervenir dès que possible au prix de 80€ de l'heure. Dupont Plomberie, votre spécialiste.\\\"\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"<prospect_input>Nom: {{ $json.name }}\\nDemande: {{ $json.request }}</prospect_input>\"\n    }\n  ]\n}",
+        "options": {}
+      }
     },
     {
       "id": "node-truncate-sms",
@@ -93,7 +119,7 @@
       "typeVersion": 2,
       "position": [1560, 260],
       "parameters": {
-        "jsCode": "// TODO: Plan 05 — truncate claude output + build owner SMS\nreturn $input.all();"
+        "jsCode": "// Parse Claude API response and prepare SMS fields\n// RESP-01: extract generated message\nconst claudeOutput = $json.content?.[0]?.text || '';\n\n// RESP-05: truncate to 155 chars to stay within single SMS segment (160 minus safety margin)\nconst claudeMessage = claudeOutput.length > 155\n  ? claudeOutput.substring(0, 152) + '...'\n  : claudeOutput;\n\n// Carry forward all lead fields for downstream nodes\nreturn [{\n  json: {\n    lead_id: $json.lead_id,\n    is_test: $json.is_test,\n    phone: $json.phone,\n    email: $json.email,\n    name: $json.name,\n    request: $json.request,\n    claude_message: claudeMessage,\n    claude_raw: claudeOutput,\n    submit_time: $json.submit_time,\n    raw: $json.raw\n  }\n}];"
       }
     },
     {

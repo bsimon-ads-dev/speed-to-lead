@@ -16,7 +16,7 @@
       "typeVersion": 2,
       "position": [460, 300],
       "parameters": {
-        "jsCode": "// TODO: Plan 04 — read staticData.lastLead + format fallback SMS for Baptiste\nreturn $input.all();"
+        "jsCode": "// NOTIF-04: Error fallback — send raw lead to Baptiste when pipeline fails\n// Read lead data stored by main workflow's raw log node\nconst staticData = $getWorkflowStaticData('global');\nconst rawLead = staticData.lastLead ? JSON.parse(staticData.lastLead) : null;\n\n// Parse error context from Error Trigger\nconst workflowName = $json.workflow?.name || 'Speed to Lead';\nconst errorMsg = $json.execution?.error?.message || 'Erreur inconnue';\nconst lastNode = $json.execution?.lastNodeExecuted || 'noeud inconnu';\n\n// Build fallback SMS (keep under 320 chars — 2 SMS segments max)\nlet sms;\nif (rawLead) {\n  // Extract basic lead info for Baptiste\n  const fields = {};\n  for (const col of rawLead.user_column_data || []) {\n    fields[col.column_name] = col.string_value;\n  }\n  const name = fields['FULL_NAME'] || 'Inconnu';\n  const phone = fields['PHONE_NUMBER'] || 'pas de tél';\n  const request = fields['demande'] || fields['message'] || '';\n  const leadId = rawLead.lead_id || '?';\n  sms = `LEAD PERDU [${workflowName}]\\nErreur: ${errorMsg.substring(0, 60)}\\nLead: ${name} | ${phone}\\nDemande: ${request.substring(0, 60)}\\nID: ${leadId}`;\n} else {\n  sms = `LEAD PERDU [${workflowName}]\\nErreur: ${errorMsg.substring(0, 80)}\\nDernier noeud: ${lastNode}\\nAucune donnée lead disponible.`;\n}\n\n// Truncate total SMS to 320 chars (2 segments) as hard limit\nreturn [{ json: { fallback_sms: sms.substring(0, 320) } }];"
       }
     },
     {

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-whatsapp-hardening 03-01-PLAN.md — WhatsApp config fields and circuit breaker
-last_updated: "2026-03-28T15:28:56.141Z"
+stopped_at: Completed 03-whatsapp-hardening 03-03-PLAN.md — Phase 3 test procedures and UptimeRobot checkpoint
+last_updated: "2026-03-28T15:32:13.085Z"
 last_activity: 2026-03-28
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 13
-  completed_plans: 11
+  completed_plans: 12
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 ## Current Position
 
 Phase: 03 (whatsapp-hardening) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-03-28
 
@@ -63,6 +63,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 02-follow-up-multi-tenant P03 | 2 | 2 tasks | 2 files |
 | Phase 02-follow-up-multi-tenant P04 | 5 | 2 tasks | 2 files |
 | Phase 03-whatsapp-hardening P01 | 2 | 2 tasks | 3 files |
+| Phase 03-whatsapp-hardening P03 | 2 | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -102,6 +103,8 @@ Recent decisions affecting current work:
 - [Phase 02-follow-up-multi-tenant]: 02-04: RESTORE reminder embedded in follow-up delay test — prevents accidental 45-minute production waits during testing
 - [Phase 03-whatsapp-hardening]: 03-01: WhatsApp fields default false/empty — activated per client only after WABA onboarding; separate whatsapp_sender E.164 field required (never reuse alphanumeric twilio_sender_id)
 - [Phase 03-whatsapp-hardening]: 03-01: Circuit breaker inserted as first Core Workflow node before Log Raw Payload; CB Alert reuses client Twilio credentials; alert node has no outgoing connection
+- [Phase 03-whatsapp-hardening]: UptimeRobot checkpoint auto-approved (auto_advance mode) — human must configure using /webhook/ URL (not /webhook-test/)
+- [Phase 03-whatsapp-hardening]: Test 3-A documents that staticData does NOT persist across editor test executions — circuit breaker requires production webhook-triggered executions
 
 ### Pending Todos
 
@@ -114,6 +117,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T15:28:56.138Z
-Stopped at: Completed 03-whatsapp-hardening 03-01-PLAN.md — WhatsApp config fields and circuit breaker
+Last session: 2026-03-28T15:32:13.082Z
+Stopped at: Completed 03-whatsapp-hardening 03-03-PLAN.md — Phase 3 test procedures and UptimeRobot checkpoint
 Resume file: None

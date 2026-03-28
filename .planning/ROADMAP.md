@@ -69,7 +69,7 @@ Plans:
 Plans:
 - [x] 03-01-PLAN.md — WhatsApp config schema + circuit breaker node in Core Workflow
 - [ ] 03-02-PLAN.md — WhatsApp prospect + owner branches in Core Workflow + entry workflow assemblers
-- [ ] 03-03-PLAN.md — Phase 3 test procedures in TESTING.md + UptimeRobot monitor setup checkpoint
+- [x] 03-03-PLAN.md — Phase 3 test procedures in TESTING.md + UptimeRobot monitor setup checkpoint
 
 **UI hint**: no
 
@@ -82,4 +82,4 @@ Phases execute in numeric order: 1 → 2 → 3
 |-------|----------------|--------|-----------|
 | 1. Critical Path | 6/6 | Complete   | 2026-03-28 |
 | 2. Follow-up + Multi-tenant | 4/4 | Complete   | 2026-03-28 |
-| 3. WhatsApp + Hardening | 0/3 | Not started | - |
+| 3. WhatsApp + Hardening | 2/3 | In Progress|  |

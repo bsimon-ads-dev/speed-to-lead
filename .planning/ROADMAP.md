@@ -33,7 +33,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 - [x] 01-01-PLAN.md — Test fixture library: 4 JSON payloads + shell test runner + testing guide
 - [x] 01-02-PLAN.md — Project scaffold: client config JSON, n8n workflow skeletons, Claude prompt template
-- [ ] 01-03-PLAN.md — Ingestion layer: webhook (200 immediately) + raw log + google_key validation + dedup + field extraction
+- [x] 01-03-PLAN.md — Ingestion layer: webhook (200 immediately) + raw log + google_key validation + dedup + field extraction
 - [ ] 01-04-PLAN.md — Error handler workflow: Error Trigger + fallback SMS to Baptiste via Twilio
 - [ ] 01-05-PLAN.md — AI + channel dispatch: Claude API call + SMS truncation + Twilio prospect SMS + Brevo email
 - [ ] 01-06-PLAN.md — Owner notification + wiring: owner SMS with tel: link + error workflow link + end-to-end verification
@@ -68,6 +68,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Critical Path | 0/6 | Not started | - |
+| 1. Critical Path | 3/6 | In Progress|  |
 | 2. Follow-up + Multi-tenant | 0/TBD | Not started | - |
 | 3. WhatsApp + Hardening | 0/TBD | Not started | - |

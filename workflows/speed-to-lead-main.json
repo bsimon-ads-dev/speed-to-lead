@@ -30,7 +30,29 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [680, 300],
-      "parameters": {}
+      "parameters": {
+        "conditions": {
+          "options": {
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "condition-google-key",
+              "leftValue": "={{ $json.google_key }}",
+              "rightValue": "={{ $env.GOOGLE_KEY }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ]
+        },
+        "looseTypeValidation": false
+      }
     },
     {
       "id": "node-dedup",
@@ -38,7 +60,13 @@
       "type": "n8n-nodes-base.removeDuplicates",
       "typeVersion": 1,
       "position": [900, 260],
-      "parameters": {}
+      "parameters": {
+        "operation": "removeItemsSeenInPreviousExecutions",
+        "deduplicationKey": "={{ $json.lead_id }}",
+        "options": {
+          "historySize": 10000
+        }
+      }
     },
     {
       "id": "node-extract-fields",
@@ -47,7 +75,7 @@
       "typeVersion": 2,
       "position": [1120, 260],
       "parameters": {
-        "jsCode": "// TODO: Plan 03 — extract user_column_data fields\nreturn $input.all();"
+        "jsCode": "// Parse Google Ads Lead Form nested array into flat fields\n// Source: https://developers.google.com/google-ads/webhook/docs/implementation\nconst lead = $input.first().json;\nconst fields = {};\n\nfor (const col of lead.user_column_data || []) {\n  fields[col.column_name] = col.string_value;\n}\n\n// is_test check: log-only mode, no sends for test leads\n// Note: deduplication still runs for is_test leads — intentional\nconst isTest = lead.is_test === true;\n\nreturn [{\n  json: {\n    lead_id: lead.lead_id,\n    is_test: isTest,\n    phone: fields['PHONE_NUMBER'] || null,\n    email: fields['EMAIL'] || null,\n    name: fields['FULL_NAME'] || 'Prospect',\n    request: fields['demande'] || fields['message'] || fields['MESSAGE'] || '',\n    submit_time: lead.lead_submit_time,\n    raw: lead\n  }\n}];"
       }
     },
     {

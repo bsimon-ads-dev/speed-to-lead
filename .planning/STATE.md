@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-critical-path 01-01-PLAN.md — test fixture library
-last_updated: "2026-03-28T13:51:14.928Z"
+stopped_at: Completed 01-critical-path 01-02-PLAN.md — file structure skeletons
+last_updated: "2026-03-28T13:54:48.907Z"
 last_activity: 2026-03-28
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 6
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 ## Current Position
 
 Phase: 01 (critical-path) — EXECUTING
-Plan: 2 of 6
+Plan: 3 of 6
 Status: Ready to execute
 Last activity: 2026-03-28
 
@@ -53,6 +53,7 @@ Progress: [░░░░░░░░░░] 0%
 
 *Updated after each plan completion*
 | Phase 01-critical-path P01 | 8 | 2 tasks | 6 files |
+| Phase 01-critical-path P02 | 2 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -67,6 +68,9 @@ Recent decisions affecting current work:
 - Init: WhatsApp deferred to Phase 3 — Meta template approval (1-3 days) and WABA onboarding complexity unjustified before SMS path is validated in production
 - [Phase 01-critical-path]: 01-01: REPLACE_WITH_YOUR_GOOGLE_KEY placeholder in fixtures; substituted at runtime via sed to avoid committing real credentials
 - [Phase 01-critical-path]: 01-01: test-webhook.sh defaults to webhook-test URL so development testing requires no workflow activation
+- [Phase 01-critical-path]: 01-02: Workflow skeleton approach — nodes present with TODO comments so Plans 03-06 build into pre-existing structure to prevent connection errors
+- [Phase 01-critical-path]: 01-02: env_vars_required field in client config serves as installation checklist for each new client
+- [Phase 01-critical-path]: 01-02: Prompt template stored as .txt with n8n expression syntax — Plan 05 embeds verbatim in Claude HTTP Request node system prompt
 
 ### Pending Todos
 
@@ -79,6 +83,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T13:51:14.925Z
-Stopped at: Completed 01-critical-path 01-01-PLAN.md — test fixture library
+Last session: 2026-03-28T13:54:48.904Z
+Stopped at: Completed 01-critical-path 01-02-PLAN.md — file structure skeletons
 Resume file: None

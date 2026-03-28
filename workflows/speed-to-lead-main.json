@@ -128,7 +128,29 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [1780, 260],
-      "parameters": {}
+      "parameters": {
+        "conditions": {
+          "options": {
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "condition-phone-exists",
+              "leftValue": "={{ $json.phone }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty",
+                "name": "filter.operator.isNotEmpty"
+              }
+            }
+          ]
+        },
+        "looseTypeValidation": true
+      }
     },
     {
       "id": "node-twilio-prospect",
@@ -136,7 +158,31 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [2000, 180],
-      "parameters": {}
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $env.TWILIO_ACCOUNT_SID }}/Messages.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "To",
+              "value": "={{ $json.phone }}"
+            },
+            {
+              "name": "From",
+              "value": "={{ $env.TWILIO_SENDER_ID }}"
+            },
+            {
+              "name": "Body",
+              "value": "={{ $json.claude_message }}"
+            }
+          ]
+        },
+        "options": {}
+      }
     },
     {
       "id": "node-brevo-email",
@@ -144,7 +190,14 @@
       "type": "n8n-nodes-base.brevo",
       "typeVersion": 1,
       "position": [2000, 380],
-      "parameters": {}
+      "parameters": {
+        "resource": "email",
+        "operation": "send",
+        "fromEmail": "={{ $env.BREVO_SENDER_EMAIL }}",
+        "toEmail": "={{ $json.email }}",
+        "subject": "=Votre demande — {{ $env.BUSINESS_NAME }}",
+        "htmlContent": "=<p>{{ $json.claude_message }}</p><br><p style=\"color:#666;font-size:12px;\">{{ $env.BUSINESS_NAME }} — Vous pouvez répondre à cet email ou appeler directement.</p>"
+      }
     },
     {
       "id": "node-owner-format",

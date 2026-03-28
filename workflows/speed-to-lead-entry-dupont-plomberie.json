@@ -1,0 +1,98 @@
+{
+  "name": "Speed to Lead — Entry: dupont-plomberie",
+  "nodes": [
+    {
+      "id": "entry-dupont-webhook",
+      "name": "Webhook: Google Ads Lead",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "parameters": {
+        "path": "dupont-plomberie",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "webhookId": "entry-dupont-plomberie"
+    },
+    {
+      "id": "entry-dupont-validate-key",
+      "name": "IF: google_key valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "condition-google-key-dupont",
+              "leftValue": "={{ $json.google_key }}",
+              "rightValue": "={{ $env.DUPONT_GOOGLE_KEY }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ]
+        },
+        "looseTypeValidation": false
+      }
+    },
+    {
+      "id": "entry-dupont-config",
+      "name": "Code: Assemble Client Config",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 260],
+      "parameters": {
+        "jsCode": "// CONF-01: Assemble per-client config for Core Workflow\n// Non-sensitive values hardcoded here (safe to commit)\n// Sensitive values read from env vars with DUPONT_ prefix\nconst lead = $input.first().json;\n\nconst clientConfig = {\n  client_slug: 'dupont-plomberie',\n  business_name: 'Dupont Plomberie',\n  service_type: 'plombier',\n  city: 'Paris',\n  owner_phone: '+33600000000',\n  brevo_sender_email: 'no-reply@dupont-plomberie.fr',\n  callback_promise_minutes: 30,\n  follow_up_delay_minutes: 45,\n  follow_up_enabled: true,\n  // Sensitive: read from n8n env vars — never hardcoded\n  twilio_account_sid: $env.DUPONT_TWILIO_ACCOUNT_SID,\n  twilio_auth_token: $env.DUPONT_TWILIO_AUTH_TOKEN,\n  twilio_sender_id: $env.DUPONT_TWILIO_SENDER_ID\n};\n\n// Merge lead payload with client config\nreturn [{ json: { ...lead, client_config: clientConfig } }];"
+      }
+    },
+    {
+      "id": "entry-dupont-execute-core",
+      "name": "Execute: Core Workflow",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 2,
+      "position": [900, 260],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "CORE_WORKFLOW_ID",
+          "mode": "id"
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook: Google Ads Lead": {
+      "main": [[{ "node": "IF: google_key valid?", "type": "main", "index": 0 }]]
+    },
+    "IF: google_key valid?": {
+      "main": [
+        [{ "node": "Code: Assemble Client Config", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Code: Assemble Client Config": {
+      "main": [[{ "node": "Execute: Core Workflow", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "_setup_notes": {
+    "post_import_step": "After importing: 1) Open the 'Execute: Core Workflow' node, click the workflow selector, and choose 'Speed to Lead — Core' by name. This updates the CORE_WORKFLOW_ID placeholder to the actual workflow ID assigned by this n8n instance. 2) Set env vars: DUPONT_GOOGLE_KEY, DUPONT_TWILIO_ACCOUNT_SID, DUPONT_TWILIO_AUTH_TOKEN, DUPONT_TWILIO_SENDER_ID. 3) Activate the workflow. 4) Configure Google Ads Lead Form webhook URL to: https://{your-n8n-host}/webhook/dupont-plomberie",
+    "google_key_note": "Per-client google_key validation happens here in the entry workflow — the Core Workflow trusts the payload it receives from authenticated entry workflows.",
+    "fire_and_forget": "waitForSubWorkflow: false is REQUIRED. The Core Workflow contains a Wait node (45 min by default). If waitForSubWorkflow were true, this entry workflow would block for 45+ minutes before returning HTTP 200 to Google Ads — causing timeout and lead loss."
+  }
+}

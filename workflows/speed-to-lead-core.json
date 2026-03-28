@@ -1,0 +1,370 @@
+{
+  "name": "Speed to Lead \u2014 Core",
+  "nodes": [
+    {
+      "id": "node-subworkflow-trigger",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "parameters": {}
+    },
+    {
+      "id": "node-log-raw",
+      "name": "Code: Log Raw Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "parameters": {
+        "jsCode": "// INGEST-03: Log raw payload for audit/debug\n// NOTIF-04 prep: Store last lead in staticData for error recovery\nconst lead = $input.first().json;\n\n// Log to n8n execution log (visible in Executions view for 7 days)\nconsole.log('RAW_LEAD:', JSON.stringify(lead));\n\n// Store in workflow static data so Error Handler workflow can recover it\n// This survives even if subsequent nodes fail\nconst staticData = $getWorkflowStaticData('global');\nstaticData.lastLead = JSON.stringify(lead);\nstaticData.lastLeadTime = new Date().toISOString();\n\n// Pass through unchanged — do not modify the payload\nreturn $input.all();"
+      }
+    },
+    {
+      "id": "node-dedup",
+      "name": "Remove Duplicates: lead_id",
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "parameters": {
+        "operation": "removeItemsSeenInPreviousExecutions",
+        "deduplicationKey": "={{ $json.lead_id }}",
+        "options": {
+          "historySize": 10000
+        }
+      }
+    },
+    {
+      "id": "node-extract-fields",
+      "name": "Code: Extract Lead Fields",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300],
+      "parameters": {
+        "jsCode": "// Parse Google Ads Lead Form nested array into flat fields\n// Source: https://developers.google.com/google-ads/webhook/docs/implementation\nconst lead = $input.first().json;\nconst fields = {};\n\nfor (const col of lead.user_column_data || []) {\n  fields[col.column_name] = col.string_value;\n}\n\n// is_test check: log-only mode, no sends for test leads\n// Note: deduplication still runs for is_test leads — intentional\nconst isTest = lead.is_test === true;\n\nreturn [{\n  json: {\n    lead_id: lead.lead_id,\n    is_test: isTest,\n    phone: fields['PHONE_NUMBER'] || null,\n    email: fields['EMAIL'] || null,\n    name: fields['FULL_NAME'] || 'Prospect',\n    request: fields['demande'] || fields['message'] || fields['MESSAGE'] || '',\n    submit_time: lead.lead_submit_time,\n    raw: lead,\n    client_config: lead.client_config\n  }\n}];"
+      }
+    },
+    {
+      "id": "node-claude",
+      "name": "HTTP Request: Claude API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1120, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-api-key",
+              "value": "={{ $env.ANTHROPIC_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"model\": \"claude-haiku-4-5\",\n  \"max_tokens\": 200,\n  \"system\": \"Tu travailles pour {{ $json.client_config.business_name }}, {{ $json.client_config.service_type }} bas\u00e9(e) \u00e0 {{ $json.client_config.city }}.\\n\\nUn prospect vient de soumettre un formulaire de contact Google Ads.\\n\\nTa mission : r\u00e9diger UN SMS de confirmation en fran\u00e7ais.\\n\\nR\u00e8gles STRICTES :\\n- Le SMS doit faire STRICTEMENT MOINS DE 160 caract\u00e8res (espaces compris)\\n- Reformule en une phrase la demande sp\u00e9cifique du prospect (ce qu'il a \u00e9crit)\\n- Confirme qu'on le rappelle sous {{ $json.client_config.callback_promise_minutes }} minutes\\n- N'invente AUCUN prix, d\u00e9lai exact, ni disponibilit\u00e9 non confirm\u00e9e\\n- N'ajoute AUCUNE formule de politesse, signature, ou introduction\\n- Commence DIRECTEMENT par le contenu du SMS\\n\\nExemple acceptable (150 caract\u00e8res) :\\n\\\"Bonjour Marie, votre fuite d'eau sous l'\u00e9vier : notre plombier vous rappelle sous 30 minutes. Dupont Plomberie.\\\"\\n\\nExemple interdit (trop long, prix invent\u00e9) :\\n\\\"Bonjour Marie, nous avons bien re\u00e7u votre demande concernant une fuite d'eau sous votre \u00e9vier de cuisine. Nous vous confirmons qu'un de nos plombiers qualifi\u00e9s vous contactera dans les 30 prochaines minutes pour intervenir d\u00e8s que possible au prix de 80\u20ac de l'heure. Dupont Plomberie, votre sp\u00e9cialiste.\\\"\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"<prospect_input>Nom: {{ $json.name }}\\nDemande: {{ $json.request }}</prospect_input>\"\n    }\n  ]\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "node-truncate-sms",
+      "name": "Code: Truncate SMS to 155 chars",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 300],
+      "parameters": {
+        "jsCode": "// Parse Claude API response and prepare SMS fields\n// RESP-01: extract generated message\nconst claudeOutput = $json.content?.[0]?.text || '';\n\n// RESP-05: truncate to 155 chars to stay within single SMS segment (160 minus safety margin)\nconst claudeMessage = claudeOutput.length > 155\n  ? claudeOutput.substring(0, 152) + '...'\n  : claudeOutput;\n\n// Carry forward all lead fields for downstream nodes\nreturn [{\n  json: {\n    lead_id: $json.lead_id,\n    is_test: $json.is_test,\n    phone: $json.phone,\n    email: $json.email,\n    name: $json.name,\n    request: $json.request,\n    claude_message: claudeMessage,\n    claude_raw: claudeOutput,\n    submit_time: $json.submit_time,\n    raw: $json.raw,\n    client_config: $json.client_config\n  }\n}];"
+      }
+    },
+    {
+      "id": "node-route-channel",
+      "name": "IF: phone available?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1560, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "condition-phone-exists",
+              "leftValue": "={{ $json.phone }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty",
+                "name": "filter.operator.isNotEmpty"
+              }
+            }
+          ]
+        },
+        "looseTypeValidation": true
+      }
+    },
+    {
+      "id": "node-twilio-prospect",
+      "name": "HTTP Request: Twilio SMS (Prospect)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1780, 220],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $json.client_config.twilio_account_sid }}/Messages.json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Basic {{ Buffer.from($json.client_config.twilio_account_sid + ':' + $json.client_config.twilio_auth_token).toString('base64') }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "To",
+              "value": "={{ $json.phone }}"
+            },
+            {
+              "name": "From",
+              "value": "={{ $json.client_config.twilio_sender_id }}"
+            },
+            {
+              "name": "Body",
+              "value": "={{ $json.claude_message }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "node-brevo-email",
+      "name": "Brevo: Send Email (Prospect)",
+      "type": "n8n-nodes-base.brevo",
+      "typeVersion": 1,
+      "position": [1780, 420],
+      "parameters": {
+        "resource": "email",
+        "operation": "send",
+        "fromEmail": "={{ $json.client_config.brevo_sender_email }}",
+        "toEmail": "={{ $json.email }}",
+        "subject": "=Votre demande \u2014 {{ $json.client_config.business_name }}",
+        "htmlContent": "=<p>{{ $json.claude_message }}</p><br><p style=\"color:#666;font-size:12px;\">{{ $json.client_config.business_name }} \u2014 Vous pouvez r\u00e9pondre \u00e0 cet email ou appeler directement.</p>"
+      }
+    },
+    {
+      "id": "node-owner-format",
+      "name": "Code: Format Owner Notification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2000, 220],
+      "parameters": {
+        "jsCode": "// NOTIF-01, NOTIF-02: Owner notification with tel: one-tap callback link\nconst name = $json.name || 'Prospect';\nconst request = $json.request || '';\nconst phone = $json.phone || null;\nconst email = $json.email || 'non fourni';\nconst claudeMsg = $json.claude_message || '';\n\n// Build owner SMS — keep under 320 chars (2 segments)\nlet ownerSms;\nif (phone) {\n  // Phone available: include one-tap tel: link\n  ownerSms = `Lead: ${name}\\n\"${request.substring(0, 60)}\"\\nAppeler: tel:${phone}`;\n} else {\n  // Email only: no tel: link possible\n  ownerSms = `Lead: ${name}\\n\"${request.substring(0, 60)}\"\\nEmail: ${email}\\n(Pas de t\u00e9l)`;\n}\n\n// Truncate to 320 chars max\nownerSms = ownerSms.substring(0, 320);\n\n// Carry all fields forward for potential future nodes\nreturn [{\n  json: {\n    lead_id: $json.lead_id,\n    name,\n    phone,\n    email,\n    request,\n    claude_message: claudeMsg,\n    owner_sms: ownerSms,\n    client_config: $json.client_config\n  }\n}];"
+      }
+    },
+    {
+      "id": "node-twilio-owner",
+      "name": "HTTP Request: Twilio SMS (Owner)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [2220, 220],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $json.client_config.twilio_account_sid }}/Messages.json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Basic {{ Buffer.from($json.client_config.twilio_account_sid + ':' + $json.client_config.twilio_auth_token).toString('base64') }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "To",
+              "value": "={{ $json.client_config.owner_phone }}"
+            },
+            {
+              "name": "From",
+              "value": "={{ $json.client_config.twilio_sender_id }}"
+            },
+            {
+              "name": "Body",
+              "value": "={{ $json.owner_sms }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "node-wait-followup",
+      "name": "Wait: Follow-up Delay",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [2440, 220],
+      "parameters": {
+        "resume": "timeInterval",
+        "unit": "minutes",
+        "amount": "={{ $json.client_config.follow_up_delay_minutes }}"
+      }
+    },
+    {
+      "id": "node-biz-hours",
+      "name": "Code: Business Hours Check",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2660, 220],
+      "parameters": {
+        "jsCode": "// NOTIF-03: Gate follow-up on business hours\n// Reference: n8n Luxon cookbook — $now.setZone(), .hour, .weekday\nconst now = $now.setZone('Europe/Paris');\nconst hour = now.hour;       // 0-23\nconst weekday = now.weekday; // 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat, 7=Sun\n\n// Allow Mon-Sat 08:00-19:59 Paris time\nconst business_hours_ok = (\n  weekday >= 1 &&\n  weekday <= 6 &&\n  hour >= 8 &&\n  hour < 20\n);\n\nconsole.log('Business hours check:', { weekday, hour, business_hours_ok, tz: 'Europe/Paris' });\n\nreturn [{ json: { ...$input.first().json, business_hours_ok } }];"
+      }
+    },
+    {
+      "id": "node-if-biz-hours",
+      "name": "IF: Business Hours OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2880, 220],
+      "parameters": {
+        "conditions": {
+          "options": { "leftValue": "", "caseSensitive": true, "typeValidation": "strict" },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "condition-biz-hours",
+              "leftValue": "={{ $json.business_hours_ok }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "name": "filter.operator.true"
+              }
+            }
+          ]
+        },
+        "looseTypeValidation": false
+      }
+    },
+    {
+      "id": "node-twilio-followup",
+      "name": "HTTP Request: Twilio SMS (Follow-up)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [3100, 140],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $json.client_config.twilio_account_sid }}/Messages.json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Basic {{ Buffer.from($json.client_config.twilio_account_sid + ':' + $json.client_config.twilio_auth_token).toString('base64') }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "To", "value": "={{ $json.phone }}" },
+            { "name": "From", "value": "={{ $json.client_config.twilio_sender_id }}" },
+            { "name": "Body", "value": "=Toujours disponible pour votre demande ? {{ $json.client_config.business_name }} peut vous rappeler maintenant." }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "node-log-followup-skipped",
+      "name": "Code: Log Follow-up Skipped",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3100, 300],
+      "parameters": {
+        "jsCode": "// NOTIF-03: Follow-up suppressed — outside business hours Mon-Sat 08:00-20:00 Paris\nconsole.log('Follow-up skipped (outside hours):', {\n  lead_id: $json.lead_id,\n  client: $json.client_config?.client_slug,\n  checked_at: new Date().toISOString()\n});\nreturn $input.all();"
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [[{ "node": "Code: Log Raw Payload", "type": "main", "index": 0 }]]
+    },
+    "Code: Log Raw Payload": {
+      "main": [[{ "node": "Remove Duplicates: lead_id", "type": "main", "index": 0 }]]
+    },
+    "Remove Duplicates: lead_id": {
+      "main": [
+        [{ "node": "Code: Extract Lead Fields", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Code: Extract Lead Fields": {
+      "main": [[{ "node": "HTTP Request: Claude API", "type": "main", "index": 0 }]]
+    },
+    "HTTP Request: Claude API": {
+      "main": [[{ "node": "Code: Truncate SMS to 155 chars", "type": "main", "index": 0 }]]
+    },
+    "Code: Truncate SMS to 155 chars": {
+      "main": [[{ "node": "IF: phone available?", "type": "main", "index": 0 }]]
+    },
+    "IF: phone available?": {
+      "main": [
+        [{ "node": "HTTP Request: Twilio SMS (Prospect)", "type": "main", "index": 0 }],
+        [{ "node": "Brevo: Send Email (Prospect)", "type": "main", "index": 0 }]
+      ]
+    },
+    "HTTP Request: Twilio SMS (Prospect)": {
+      "main": [[{ "node": "Code: Format Owner Notification", "type": "main", "index": 0 }]]
+    },
+    "Brevo: Send Email (Prospect)": {
+      "main": [[{ "node": "Code: Format Owner Notification", "type": "main", "index": 0 }]]
+    },
+    "Code: Format Owner Notification": {
+      "main": [[{ "node": "HTTP Request: Twilio SMS (Owner)", "type": "main", "index": 0 }]]
+    },
+    "HTTP Request: Twilio SMS (Owner)": {
+      "main": [[{ "node": "Wait: Follow-up Delay", "type": "main", "index": 0 }]]
+    },
+    "Wait: Follow-up Delay": {
+      "main": [[{ "node": "Code: Business Hours Check", "type": "main", "index": 0 }]]
+    },
+    "Code: Business Hours Check": {
+      "main": [[{ "node": "IF: Business Hours OK?", "type": "main", "index": 0 }]]
+    },
+    "IF: Business Hours OK?": {
+      "main": [
+        [{ "node": "HTTP Request: Twilio SMS (Follow-up)", "type": "main", "index": 0 }],
+        [{ "node": "Code: Log Follow-up Skipped", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "Speed to Lead \u2014 Error Handler",
+    "saveManualExecutions": true
+  }
+}

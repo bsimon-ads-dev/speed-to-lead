@@ -1,0 +1,24 @@
+{
+  "_comment": "Per-client configuration for Speed to Lead. Sensitive values (Twilio SID/token, google_key) must be stored as n8n environment variables. This file stores only non-sensitive values and the registry of required env var names.",
+  "client_slug": "cabinet-martin",
+  "business_name": "Cabinet Martin Avocats",
+  "service_type": "avocat",
+  "city": "Lyon",
+  "owner_phone": "+33600000001",
+  "owner_email": "contact@cabinet-martin.fr",
+  "brevo_sender_email": "no-reply@cabinet-martin.fr",
+  "callback_promise_minutes": 60,
+  "follow_up_delay_minutes": 120,
+  "follow_up_enabled": true,
+  "active": true,
+  "env_vars_required": {
+    "MARTIN_GOOGLE_KEY": "Shared secret from Google Ads Lead Form settings for Cabinet Martin",
+    "MARTIN_TWILIO_ACCOUNT_SID": "Twilio Account SID for Cabinet Martin (from Twilio Console)",
+    "MARTIN_TWILIO_AUTH_TOKEN": "Twilio Auth Token for Cabinet Martin (from Twilio Console)",
+    "MARTIN_TWILIO_SENDER_ID": "Alphanumeric sender ID for Cabinet Martin — max 11 chars, e.g. CabMartin",
+    "ANTHROPIC_API_KEY": "Shared — from console.anthropic.com > API Keys",
+    "BREVO_API_KEY": "Shared — from app.brevo.com > Settings > API Keys",
+    "BAPTISTE_PHONE": "Baptiste's mobile in E.164 format — receives error fallback SMS"
+  },
+  "_rgpd_note": "Pre-launch requirement: Lead Form must include a pre-unchecked consent checkbox: 'J accepte d etre contacte(e) par SMS par Cabinet Martin Avocats concernant ma demande.' Consent must be collected before first production send."
+}

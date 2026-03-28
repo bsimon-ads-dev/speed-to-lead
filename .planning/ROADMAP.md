@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Critical Path** - Webhook to prospect SMS + owner notification, end-to-end, one client (completed 2026-03-28)
 - [x] **Phase 2: Follow-up + Multi-tenant** - Configurable follow-up scheduler and shared Core Workflow for N clients (completed 2026-03-28)
-- [ ] **Phase 3: WhatsApp + Hardening** - WhatsApp channel for both branches and production reliability ops
+- [x] **Phase 3: WhatsApp + Hardening** - WhatsApp channel for both branches and production reliability ops (completed 2026-03-28)
 
 ## Phase Details
 
@@ -68,7 +68,7 @@ Plans:
 
 Plans:
 - [x] 03-01-PLAN.md — WhatsApp config schema + circuit breaker node in Core Workflow
-- [ ] 03-02-PLAN.md — WhatsApp prospect + owner branches in Core Workflow + entry workflow assemblers
+- [x] 03-02-PLAN.md — WhatsApp prospect + owner branches in Core Workflow + entry workflow assemblers
 - [x] 03-03-PLAN.md — Phase 3 test procedures in TESTING.md + UptimeRobot monitor setup checkpoint
 
 **UI hint**: no
@@ -82,4 +82,4 @@ Phases execute in numeric order: 1 → 2 → 3
 |-------|----------------|--------|-----------|
 | 1. Critical Path | 6/6 | Complete   | 2026-03-28 |
 | 2. Follow-up + Multi-tenant | 4/4 | Complete   | 2026-03-28 |
-| 3. WhatsApp + Hardening | 2/3 | In Progress|  |
+| 3. WhatsApp + Hardening | 3/3 | Complete   | 2026-03-28 |

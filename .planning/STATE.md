@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 03-whatsapp-hardening 03-03-PLAN.md — Phase 3 test procedures and UptimeRobot checkpoint
-last_updated: "2026-03-28T15:32:13.085Z"
+status: verifying
+stopped_at: Completed 03-whatsapp-hardening 03-02-PLAN.md — WhatsApp branches in Core Workflow and entry config assemblers
+last_updated: "2026-03-28T15:36:09.889Z"
 last_activity: 2026-03-28
 progress:
   total_phases: 3
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 13
-  completed_plans: 12
+  completed_plans: 13
   percent: 0
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 
 Phase: 03 (whatsapp-hardening) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-03-28
 
 Progress: [░░░░░░░░░░] 0%
@@ -64,6 +64,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 02-follow-up-multi-tenant P04 | 5 | 2 tasks | 2 files |
 | Phase 03-whatsapp-hardening P01 | 2 | 2 tasks | 3 files |
 | Phase 03-whatsapp-hardening P03 | 2 | 2 tasks | 1 files |
+| Phase 03-whatsapp-hardening P02 | 2 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -105,6 +106,9 @@ Recent decisions affecting current work:
 - [Phase 03-whatsapp-hardening]: 03-01: Circuit breaker inserted as first Core Workflow node before Log Raw Payload; CB Alert reuses client Twilio credentials; alert node has no outgoing connection
 - [Phase 03-whatsapp-hardening]: UptimeRobot checkpoint auto-approved (auto_advance mode) — human must configure using /webhook/ URL (not /webhook-test/)
 - [Phase 03-whatsapp-hardening]: Test 3-A documents that staticData does NOT persist across editor test executions — circuit breaker requires production webhook-triggered executions
+- [Phase 03-whatsapp-hardening]: 03-02: whatsapp: prefix hardcoded in expression (not client_config) — prevents omission misconfiguration
+- [Phase 03-whatsapp-hardening]: 03-02: ContentVariables as JSON string literal (not JSON.stringify) — avoids n8n expression engine double-encoding
+- [Phase 03-whatsapp-hardening]: 03-02: No Body parameter on WhatsApp HTTP Request nodes — prevents WABA flagging and silent delivery failure
 
 ### Pending Todos
 
@@ -117,6 +121,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T15:32:13.082Z
-Stopped at: Completed 03-whatsapp-hardening 03-03-PLAN.md — Phase 3 test procedures and UptimeRobot checkpoint
+Last session: 2026-03-28T15:36:09.886Z
+Stopped at: Completed 03-whatsapp-hardening 03-02-PLAN.md — WhatsApp branches in Core Workflow and entry config assemblers
 Resume file: None

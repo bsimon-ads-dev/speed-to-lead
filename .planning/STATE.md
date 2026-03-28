@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 02-follow-up-multi-tenant 02-04-PLAN.md — Test script and TESTING.md Phase 2 procedures
-last_updated: "2026-03-28T15:06:52.460Z"
+status: executing
+stopped_at: Completed 03-whatsapp-hardening 03-01-PLAN.md — WhatsApp config fields and circuit breaker
+last_updated: "2026-03-28T15:28:56.141Z"
 last_activity: 2026-03-28
 progress:
   total_phases: 3
   completed_phases: 2
-  total_plans: 10
-  completed_plans: 10
+  total_plans: 13
+  completed_plans: 11
   percent: 0
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** Réduire le temps de réponse aux leads à < 2 minutes, 24/7 — pour que plus aucun lead payé ne soit perdu par manque de réactivité.
-**Current focus:** Phase 02 — follow-up-multi-tenant
+**Current focus:** Phase 03 — whatsapp-hardening
 
 ## Current Position
 
-Phase: 3
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 03 (whatsapp-hardening) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
 Last activity: 2026-03-28
 
 Progress: [░░░░░░░░░░] 0%
@@ -62,6 +62,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 02-follow-up-multi-tenant P02 | 2 | 1 tasks | 1 files |
 | Phase 02-follow-up-multi-tenant P03 | 2 | 2 tasks | 2 files |
 | Phase 02-follow-up-multi-tenant P04 | 5 | 2 tasks | 2 files |
+| Phase 03-whatsapp-hardening P01 | 2 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -99,6 +100,8 @@ Recent decisions affecting current work:
 - [Phase 02-follow-up-multi-tenant]: waitForSubWorkflow:false is architectural invariant in entry workflows — Core Workflow Wait node makes blocking execution cause Google Ads timeout and lead loss
 - [Phase 02-follow-up-multi-tenant]: 02-04: Positional argument for slug (not env var) — consistent with existing SCENARIO positional arg, simpler multi-client CLI UX
 - [Phase 02-follow-up-multi-tenant]: 02-04: RESTORE reminder embedded in follow-up delay test — prevents accidental 45-minute production waits during testing
+- [Phase 03-whatsapp-hardening]: 03-01: WhatsApp fields default false/empty — activated per client only after WABA onboarding; separate whatsapp_sender E.164 field required (never reuse alphanumeric twilio_sender_id)
+- [Phase 03-whatsapp-hardening]: 03-01: Circuit breaker inserted as first Core Workflow node before Log Raw Payload; CB Alert reuses client Twilio credentials; alert node has no outgoing connection
 
 ### Pending Todos
 
@@ -111,6 +114,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T15:02:53.279Z
-Stopped at: Completed 02-follow-up-multi-tenant 02-04-PLAN.md — Test script and TESTING.md Phase 2 procedures
+Last session: 2026-03-28T15:28:56.138Z
+Stopped at: Completed 03-whatsapp-hardening 03-01-PLAN.md — WhatsApp config fields and circuit breaker
 Resume file: None

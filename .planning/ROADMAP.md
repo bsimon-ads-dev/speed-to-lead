@@ -67,7 +67,7 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — WhatsApp config schema + circuit breaker node in Core Workflow
+- [x] 03-01-PLAN.md — WhatsApp config schema + circuit breaker node in Core Workflow
 - [ ] 03-02-PLAN.md — WhatsApp prospect + owner branches in Core Workflow + entry workflow assemblers
 - [ ] 03-03-PLAN.md — Phase 3 test procedures in TESTING.md + UptimeRobot monitor setup checkpoint
 

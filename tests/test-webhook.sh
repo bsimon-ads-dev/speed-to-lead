@@ -1,16 +1,21 @@
 #!/usr/bin/env bash
 # Speed to Lead — Webhook Test Runner
-# Usage: GOOGLE_KEY=your_key N8N_URL=http://localhost:5678 ./tests/test-webhook.sh [scenario]
+# Usage: GOOGLE_KEY=<key> ./tests/test-webhook.sh [scenario] [slug]
+# slug defaults to 'dupont-plomberie' if not provided
+# Examples:
+#   GOOGLE_KEY=key ./tests/test-webhook.sh happy
+#   GOOGLE_KEY=key ./tests/test-webhook.sh happy cabinet-martin
+#   GOOGLE_KEY=key ./tests/test-webhook.sh all cabinet-martin
 # Scenarios: happy | duplicate | invalid-key | email-only | all (default: all)
 
 set -euo pipefail
 
 N8N_URL="${N8N_URL:-http://localhost:5678}"
 GOOGLE_KEY="${GOOGLE_KEY:-REPLACE_WITH_YOUR_GOOGLE_KEY}"
-CLIENT_SLUG="${CLIENT_SLUG:-dupont-plomberie}"
 SCENARIO="${1:-all}"
+SLUG="${2:-dupont-plomberie}"
 
-WEBHOOK_URL="${N8N_URL}/webhook-test/${CLIENT_SLUG}"
+WEBHOOK_URL="${N8N_URL}/webhook-test/${SLUG}"
 PAYLOADS_DIR="$(dirname "$0")/payloads"
 
 send_payload() {

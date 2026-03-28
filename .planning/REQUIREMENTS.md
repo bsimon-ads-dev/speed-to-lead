@@ -14,11 +14,11 @@
 
 ### Réponse Prospect
 
-- [ ] **RESP-01**: Le système génère un message personnalisé via Claude API qui reformule la demande du prospect et confirme un rappel sous X minutes
-- [ ] **RESP-02**: Le système envoie le message par SMS via Twilio si le numéro de téléphone est disponible
-- [ ] **RESP-03**: Le système envoie le message par email via Brevo si seul l'email est disponible
+- [x] **RESP-01**: Le système génère un message personnalisé via Claude API qui reformule la demande du prospect et confirme un rappel sous X minutes
+- [x] **RESP-02**: Le système envoie le message par SMS via Twilio si le numéro de téléphone est disponible
+- [x] **RESP-03**: Le système envoie le message par email via Brevo si seul l'email est disponible
 - [x] **RESP-04**: Le prompt Claude est adapté au métier du client (plombier vs dentiste vs avocat)
-- [ ] **RESP-05**: Le message est envoyé en moins de 2 minutes après la soumission du lead
+- [x] **RESP-05**: Le message est envoyé en moins de 2 minutes après la soumission du lead
 
 ### Notification Dirigeant
 
@@ -68,11 +68,11 @@
 | INGEST-02 | Phase 1 | Complete |
 | INGEST-03 | Phase 1 | Complete |
 | INGEST-04 | Phase 1 | Complete |
-| RESP-01 | Phase 1 | Pending |
-| RESP-02 | Phase 1 | Pending |
-| RESP-03 | Phase 1 | Pending |
+| RESP-01 | Phase 1 | Complete |
+| RESP-02 | Phase 1 | Complete |
+| RESP-03 | Phase 1 | Complete |
 | RESP-04 | Phase 1 | Complete |
-| RESP-05 | Phase 1 | Pending |
+| RESP-05 | Phase 1 | Complete |
 | NOTIF-01 | Phase 1 | Pending |
 | NOTIF-02 | Phase 1 | Pending |
 | NOTIF-03 | Phase 2 | Pending |

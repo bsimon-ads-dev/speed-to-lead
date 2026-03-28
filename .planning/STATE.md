@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-critical-path 01-04-PLAN.md — error handler workflow fully implemented
-last_updated: "2026-03-28T14:01:28.522Z"
+stopped_at: Completed 01-critical-path 01-05-PLAN.md — AI layer and prospect channel dispatch fully implemented
+last_updated: "2026-03-28T14:05:12.773Z"
 last_activity: 2026-03-28
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 6
-  completed_plans: 4
+  completed_plans: 5
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 ## Current Position
 
 Phase: 01 (critical-path) — EXECUTING
-Plan: 5 of 6
+Plan: 6 of 6
 Status: Ready to execute
 Last activity: 2026-03-28
 
@@ -56,6 +56,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-critical-path P02 | 2 | 2 tasks | 4 files |
 | Phase 01-critical-path P03 | 1 | 2 tasks | 1 files |
 | Phase 01-critical-path P04 | 2 | 2 tasks | 1 files |
+| Phase 01-critical-path P05 | 2 | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -78,6 +79,8 @@ Recent decisions affecting current work:
 - [Phase 01-critical-path]: 01-04: genericCredentialType httpBasicAuth for Twilio in error handler — requires post-import credential creation, documented in _setup_notes
 - [Phase 01-critical-path]: 01-04: Error handler parses user_column_data directly from staticData.lastLead — self-contained recovery regardless of which node caused the error
 - [Phase 01-critical-path]: 01-04: 320-char SMS limit (2 segments) for fallback — includes error + lead name + phone without 3-segment cost
+- [Phase 01-critical-path]: 01-05: HTTP Request node for Twilio (not built-in) — alphanumeric A2P sender required for France, built-in node only accepts E.164
+- [Phase 01-critical-path]: 01-05: System prompt embedded verbatim in workflow JSON — n8n resolves $env.* at runtime before POST to Anthropic, no extra lookup node needed
 
 ### Pending Todos
 
@@ -90,6 +93,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T14:01:28.519Z
-Stopped at: Completed 01-critical-path 01-04-PLAN.md — error handler workflow fully implemented
+Last session: 2026-03-28T14:05:12.770Z
+Stopped at: Completed 01-critical-path 01-05-PLAN.md — AI layer and prospect channel dispatch fully implemented
 Resume file: None

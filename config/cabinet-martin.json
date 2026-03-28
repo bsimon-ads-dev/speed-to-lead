@@ -10,6 +10,11 @@
   "callback_promise_minutes": 60,
   "follow_up_delay_minutes": 120,
   "follow_up_enabled": true,
+  "whatsapp_enabled": false,
+  "owner_whatsapp_enabled": false,
+  "whatsapp_sender": "",
+  "whatsapp_template_sid": "",
+  "whatsapp_owner_template_sid": "",
   "active": true,
   "env_vars_required": {
     "MARTIN_GOOGLE_KEY": "Shared secret from Google Ads Lead Form settings for Cabinet Martin",
@@ -18,7 +23,10 @@
     "MARTIN_TWILIO_SENDER_ID": "Alphanumeric sender ID for Cabinet Martin — max 11 chars, e.g. CabMartin",
     "ANTHROPIC_API_KEY": "Shared — from console.anthropic.com > API Keys",
     "BREVO_API_KEY": "Shared — from app.brevo.com > Settings > API Keys",
-    "BAPTISTE_PHONE": "Baptiste's mobile in E.164 format — receives error fallback SMS"
+    "BAPTISTE_PHONE": "Baptiste's mobile in E.164 format — receives error fallback SMS",
+    "MARTIN_WHATSAPP_SENDER": "E.164 phone number registered as WhatsApp sender in Twilio WABA — e.g. +33600000002 (NOT alphanumeric)",
+    "MARTIN_WHATSAPP_TEMPLATE_SID": "ContentSid for prospect confirmation template — format HXabc...",
+    "MARTIN_WHATSAPP_OWNER_TEMPLATE_SID": "ContentSid for owner notification template — format HXdef..."
   },
   "_rgpd_note": "Pre-launch requirement: Lead Form must include a pre-unchecked consent checkbox: 'J accepte d etre contacte(e) par SMS par Cabinet Martin Avocats concernant ma demande.' Consent must be collected before first production send."
 }

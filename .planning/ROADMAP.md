@@ -47,7 +47,13 @@ Plans:
   2. Adding a second client requires only creating a new per-client JSON config and thin entry workflow — no changes to the Core Workflow
   3. Each client's Twilio credentials and Claude prompts are isolated; a misconfiguration for client A cannot cause a message to be sent on behalf of client B
   4. Each client has a unique webhook URL slug (e.g., `/webhook/dupont-plomberie`) and Baptiste can identify which client triggered each execution at a glance
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Per-client config schema: extend dupont-plomberie.json + create cabinet-martin.json with follow-up fields and CLIENTSLUG_ env var registry
+- [ ] 02-02-PLAN.md — Core Workflow: transform main workflow into shared parameterized Core + add follow-up scheduler (Wait + Business Hours + Follow-up SMS)
+- [ ] 02-03-PLAN.md — Entry workflows: thin per-client entry workflows for dupont-plomberie and cabinet-martin with google_key gate + config assembler + fire-and-forget Core call
+- [ ] 02-04-PLAN.md — Tests + docs: update test-webhook.sh with slug parameter + Phase 2 testing guide in TESTING.md
 
 ### Phase 3: WhatsApp + Hardening
 **Goal**: WhatsApp is available as a channel for both prospect messages and owner notifications, and the system is hardened for a growing client base with spend caps, uptime monitoring, and circuit breakers
@@ -69,5 +75,5 @@ Phases execute in numeric order: 1 → 2 → 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Critical Path | 6/6 | Complete   | 2026-03-28 |
-| 2. Follow-up + Multi-tenant | 0/TBD | Not started | - |
+| 2. Follow-up + Multi-tenant | 0/4 | Not started | - |
 | 3. WhatsApp + Hardening | 0/TBD | Not started | - |

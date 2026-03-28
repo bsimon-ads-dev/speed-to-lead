@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: "Completed 01-critical-path 01-06-PLAN.md — Phase 1 critical path complete, owner notification with tel: link implemented"
-last_updated: "2026-03-28T14:12:52.845Z"
+status: executing
+stopped_at: Completed 02-follow-up-multi-tenant 02-01-PLAN.md — config schema locked with per-client Twilio prefix and follow-up fields
+last_updated: "2026-03-28T14:52:08.382Z"
 last_activity: 2026-03-28
 progress:
   total_phases: 3
   completed_phases: 1
-  total_plans: 6
-  completed_plans: 6
+  total_plans: 10
+  completed_plans: 7
   percent: 0
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** Réduire le temps de réponse aux leads à < 2 minutes, 24/7 — pour que plus aucun lead payé ne soit perdu par manque de réactivité.
-**Current focus:** Phase 01 — critical-path
+**Current focus:** Phase 02 — follow-up-multi-tenant
 
 ## Current Position
 
-Phase: 2
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 02 (follow-up-multi-tenant) — EXECUTING
+Plan: 2 of 4
+Status: Ready to execute
 Last activity: 2026-03-28
 
 Progress: [░░░░░░░░░░] 0%
@@ -58,6 +58,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-critical-path P04 | 2 | 2 tasks | 1 files |
 | Phase 01-critical-path P05 | 2 | 2 tasks | 1 files |
 | Phase 01-critical-path P06 | 3 | 1 tasks | 1 files |
+| Phase 02-follow-up-multi-tenant P01 | 2 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -85,6 +86,8 @@ Recent decisions affecting current work:
 - [Phase 01-critical-path]: 01-06: tel: URI format tel:${phone} directly — E.164 already provided by Google Ads, no reformatting needed
 - [Phase 01-critical-path]: 01-06: Brevo branch connected to owner notification — both lead channels (SMS + email) always notify owner
 - [Phase 01-critical-path]: 01-06: 320-char limit on owner SMS (2 segments) — sufficient to include name + request snippet + tel: link
+- [Phase 02-follow-up-multi-tenant]: Per-client Twilio prefix (DUPONT_/MARTIN_) prevents credential collision when multiple clients share one n8n instance
+- [Phase 02-follow-up-multi-tenant]: follow_up_delay_minutes is per-client config — Core Workflow reads from payload, not hardcoded constants
 
 ### Pending Todos
 
@@ -97,6 +100,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T14:08:16.456Z
-Stopped at: Completed 01-critical-path 01-06-PLAN.md — Phase 1 critical path complete, owner notification with tel: link implemented
+Last session: 2026-03-28T14:52:08.379Z
+Stopped at: Completed 02-follow-up-multi-tenant 02-01-PLAN.md — config schema locked with per-client Twilio prefix and follow-up fields
 Resume file: None

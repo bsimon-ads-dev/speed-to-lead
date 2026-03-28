@@ -29,7 +29,7 @@
 
 ### Configuration
 
-- [ ] **CONF-01**: Chaque client a sa propre configuration (nom entreprise, canaux, délais, type de service)
+- [x] **CONF-01**: Chaque client a sa propre configuration (nom entreprise, canaux, délais, type de service)
 - [ ] **CONF-02**: Un seul Core Workflow n8n partagé entre tous les clients (multi-tenant)
 - [ ] **CONF-03**: Chaque client a une URL webhook unique par slug (`/webhook/dupont-plomberie`)
 
@@ -77,7 +77,7 @@
 | NOTIF-02 | Phase 1 | Complete |
 | NOTIF-03 | Phase 2 | Pending |
 | NOTIF-04 | Phase 1 | Complete |
-| CONF-01 | Phase 2 | Pending |
+| CONF-01 | Phase 2 | Complete |
 | CONF-02 | Phase 2 | Pending |
 | CONF-03 | Phase 2 | Pending |
 

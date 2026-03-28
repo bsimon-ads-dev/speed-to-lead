@@ -12,7 +12,7 @@ Three phases that build outward from the critical path. Phase 1 establishes the 
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Critical Path** - Webhook to prospect SMS + owner notification, end-to-end, one client
+- [x] **Phase 1: Critical Path** - Webhook to prospect SMS + owner notification, end-to-end, one client (completed 2026-03-28)
 - [ ] **Phase 2: Follow-up + Multi-tenant** - Configurable follow-up scheduler and shared Core Workflow for N clients
 - [ ] **Phase 3: WhatsApp + Hardening** - WhatsApp channel for both branches and production reliability ops
 
@@ -36,7 +36,7 @@ Plans:
 - [x] 01-03-PLAN.md — Ingestion layer: webhook (200 immediately) + raw log + google_key validation + dedup + field extraction
 - [x] 01-04-PLAN.md — Error handler workflow: Error Trigger + fallback SMS to Baptiste via Twilio
 - [x] 01-05-PLAN.md — AI + channel dispatch: Claude API call + SMS truncation + Twilio prospect SMS + Brevo email
-- [ ] 01-06-PLAN.md — Owner notification + wiring: owner SMS with tel: link + error workflow link + end-to-end verification
+- [x] 01-06-PLAN.md — Owner notification + wiring: owner SMS with tel: link + error workflow link + end-to-end verification
 
 ### Phase 2: Follow-up + Multi-tenant
 **Goal**: The system automatically follows up with prospects the owner hasn't called back, and the same Core Workflow serves multiple clients without credential cross-contamination
@@ -68,6 +68,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Critical Path | 3/6 | In Progress|  |
+| 1. Critical Path | 6/6 | Complete   | 2026-03-28 |
 | 2. Follow-up + Multi-tenant | 0/TBD | Not started | - |
 | 3. WhatsApp + Hardening | 0/TBD | Not started | - |

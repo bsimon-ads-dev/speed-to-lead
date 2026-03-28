@@ -160,3 +160,80 @@ Run these checks before marking Phase 2 complete:
 |--------|--------------------------|----------------------------------|
 | dupont-plomberie | http://localhost:5678/webhook-test/dupont-plomberie | https://{host}/webhook/dupont-plomberie |
 | cabinet-martin | http://localhost:5678/webhook-test/cabinet-martin | https://{host}/webhook/cabinet-martin |
+
+---
+
+## Phase 3: WhatsApp + Hardening
+
+### Test 3-A: Circuit Breaker (SC-4)
+
+**What it tests:** More than 5 executions of the same lead_id within 10 minutes halts execution and sends alert SMS to Baptiste.
+
+**Prerequisite:** n8n running. Core Workflow activated. BAPTISTE_PHONE env var set. Circuit breaker nodes present in Core Workflow (Plan 03-01).
+
+**Note on staticData:** $getWorkflowStaticData('global') does NOT persist between manual (editor) test executions. The circuit breaker only fires across production webhook-triggered executions. Use the webhook URL (not webhook-test).
+
+**Steps:**
+1. Activate the Core Workflow and dupont-plomberie entry workflow in n8n (not test mode — production activation)
+2. Send 7 identical webhook calls using the same lead_id:
+   for i in $(seq 1 7); do GOOGLE_KEY=your_key ./tests/test-webhook.sh happy dupont-plomberie; sleep 2; done
+   (Replace your_key with DUPONT_GOOGLE_KEY value)
+3. Check n8n Executions view — executions 6 and 7 should show "circuit_breaker_tripped: true" in the circuit breaker Code node output
+4. Check Baptiste's phone — should receive alert SMS: "ALERTE circuit breaker: lead_id ... a declenche X executions en 10 min..."
+
+**Expected result:** Executions 1-5 proceed normally (prospect SMS sent). Execution 6+ is halted at circuit breaker with alert SMS to Baptiste.
+
+**RESTORE:** After test, wait for the 10-minute window to expire before running production tests, or manually clear staticData.circuitBreaker in n8n Settings > Workflow static data.
+
+---
+
+### Test 3-B: WhatsApp Prospect Message (SC-1)
+
+**What it tests:** Prospect receives WhatsApp message via approved template when whatsapp_enabled is true.
+
+**Prerequisite:** WABA onboarding complete for the test client (DUPONT_WHATSAPP_SENDER env var set, DUPONT_WHATSAPP_TEMPLATE_SID set to approved ContentSid). Entry workflow has whatsapp_enabled: true set in Code: Assemble Client Config.
+
+**Steps:**
+1. Temporarily set whatsapp_enabled: true in entry workflow jsCode for dupont-plomberie
+2. Send a test lead: GOOGLE_KEY=your_key ./tests/test-webhook.sh happy dupont-plomberie
+3. Check Twilio Console > Monitor > Messaging Logs — the outbound WhatsApp message should show status "delivered" with a message SID starting with MM
+4. Check the prospect's WhatsApp — should receive the template message: "Bonjour [name], votre demande a bien ete recue. Dupont Plomberie vous rappelle sous 30 minutes."
+
+**IMPORTANT:** Never add a Body parameter to the WhatsApp HTTP Request node. If the message arrives as free-form text (not a template), the node is misconfigured. Check Twilio Console for delivery receipts — absence of delivery receipt with an MM SID means silent delivery failure (likely Body used instead of ContentSid).
+
+**Restore:** Set whatsapp_enabled back to false after testing unless activating for production.
+
+---
+
+### Test 3-C: WhatsApp Owner Notification (SC-2)
+
+**What it tests:** Owner receives WhatsApp notification when owner_whatsapp_enabled is true.
+
+**Prerequisite:** WABA onboarding complete. DUPONT_WHATSAPP_OWNER_TEMPLATE_SID env var set to approved ContentSid. Entry workflow has owner_whatsapp_enabled: true.
+
+**Steps:**
+1. Temporarily set owner_whatsapp_enabled: true in entry workflow jsCode
+2. Send a test lead: GOOGLE_KEY=your_key ./tests/test-webhook.sh happy dupont-plomberie
+3. Check Twilio Console — outbound WhatsApp to owner_phone should appear with "delivered" status
+4. Check owner's WhatsApp — should receive: "Nouveau lead: [name] — Demande: [request] — Tel: [phone]"
+
+**Restore:** Set owner_whatsapp_enabled back to false after testing.
+
+---
+
+### Test 3-D: UptimeRobot Alert (SC-3)
+
+**What it tests:** Baptiste receives alert email within 5 minutes of n8n stopping.
+
+**Prerequisite:** UptimeRobot monitor configured (see checkpoint task in Plan 03-03). n8n running in production.
+
+**Steps:**
+1. Stop n8n (Railway: pause deployment or disable the service temporarily)
+2. Wait up to 5 minutes (free tier checks every 5 minutes)
+3. Check Baptiste's email for UptimeRobot alert: "Your monitor [n8n dupont-plomberie webhook] is DOWN"
+4. Restart n8n
+5. Wait for UptimeRobot recovery email
+
+**Manual only** — cannot be automated (requires stopping the production service).
+
+**Common mistake:** If the monitor URL uses /webhook-test/ instead of /webhook/, UptimeRobot will fire false-positive alerts constantly (test URL only responds when workflow is open in editor). Verify the monitor URL uses /webhook/ (production path).

@@ -1,91 +1,78 @@
-# Requirements: Speed to Lead
+# Requirements: Speed to Lead (Template)
 
-**Defined:** 2026-03-27
-**Core Value:** Réduire le temps de réponse aux leads à < 2 minutes, 24/7 — pour que plus aucun lead payé ne soit perdu par manque de réactivité.
+**Defined:** 2026-03-28
+**Core Value:** Reduire le temps de reponse aux leads a < 2 minutes, 24/7
 
 ## v1 Requirements
 
 ### Ingestion
 
-- [x] **INGEST-01**: Le système reçoit les leads Google Ads Lead Forms via webhook HTTP POST
-- [x] **INGEST-02**: Le système déduplique les leads par `lead_id` pour éviter les messages en double
-- [x] **INGEST-03**: Le système log le payload brut de chaque lead reçu pour audit/debug
-- [x] **INGEST-04**: Le système valide l'authenticité du webhook via `google_key`
+- [ ] **INGEST-01**: Le workflow recoit les leads via webhook HTTP POST (JSON plat : name, phone, email, message)
+- [ ] **INGEST-02**: Le webhook valide un secret dans le header HTTP (X-Webhook-Secret)
+- [ ] **INGEST-03**: Le workflow deduplique les leads sur email+phone pour eviter les messages en double
+- [ ] **INGEST-04**: Le workflow log le payload brut pour debug
 
-### Réponse Prospect
+### Reponse Prospect
 
-- [x] **RESP-01**: Le système génère un message personnalisé via Claude API qui reformule la demande du prospect et confirme un rappel sous X minutes
-- [x] **RESP-02**: Le système envoie le message par SMS via Twilio si le numéro de téléphone est disponible
-- [x] **RESP-03**: Le système envoie le message par email via Brevo si seul l'email est disponible
-- [x] **RESP-04**: Le prompt Claude est adapté au métier du client (plombier vs dentiste vs avocat)
-- [x] **RESP-05**: Le message est envoyé en moins de 2 minutes après la soumission du lead
+- [ ] **RESP-01**: Claude API genere un SMS personnalise en francais qui reformule la demande du prospect
+- [ ] **RESP-02**: Le SMS est envoye au prospect via Twilio si le telephone est disponible
+- [ ] **RESP-03**: Un email est envoye au prospect via Brevo si seul l'email est disponible
+- [ ] **RESP-04**: Le prompt est adapte au metier du dirigeant (configurable)
+- [ ] **RESP-05**: Le message est envoye en moins de 2 minutes
 
 ### Notification Dirigeant
 
-- [x] **NOTIF-01**: Le dirigeant reçoit un SMS/WhatsApp avec les infos clés du lead (nom, demande, téléphone)
-- [x] **NOTIF-02**: La notification contient un lien `tel:` permettant de rappeler le prospect en un clic
-- [x] **NOTIF-03**: Si le dirigeant n'a pas rappelé après un délai configurable, le prospect reçoit une relance automatique
-- [x] **NOTIF-04**: En cas d'erreur du pipeline, Baptiste reçoit le lead brut en fallback
+- [ ] **NOTIF-01**: Le dirigeant recoit un SMS avec les infos du lead (nom, demande, telephone)
+- [ ] **NOTIF-02**: La notification contient un lien tel: pour rappeler en un clic
+- [ ] **NOTIF-03**: Si le dirigeant n'a pas rappele apres un delai configurable, le prospect recoit une relance
+- [ ] **NOTIF-04**: La relance ne se fait que pendant les heures ouvrables (08h-20h, lun-sam, Europe/Paris)
+- [ ] **NOTIF-05**: En cas d'erreur, le dirigeant recoit le lead brut en fallback
 
-### Configuration
+### Packaging
 
-- [x] **CONF-01**: Chaque client a sa propre configuration (nom entreprise, canaux, délais, type de service)
-- [x] **CONF-02**: Un seul Core Workflow n8n partagé entre tous les clients (multi-tenant)
-- [x] **CONF-03**: Chaque client a une URL webhook unique par slug (`/webhook/dupont-plomberie`)
-
-## v2 Requirements
-
-### Canaux
-
-- **CHAN-01**: Envoi WhatsApp au prospect via Twilio WABA (après validation templates Meta)
-- **CHAN-02**: Conversation IA bidirectionnelle avec le prospect
-
-### Nurturing
-
-- **NURT-01**: Séquences de relance multi-étapes (J+1, J+3, J+7)
-- **NURT-02**: Gestion des opt-out prospect
-
-### Suivi
-
-- **SUIV-01**: Détection de rappel effectif via Twilio call logs (au lieu de relance systématique)
-- **SUIV-02**: Reporting/dashboard pour Baptiste (taux de réponse, leads traités, coûts)
+- [ ] **PKG-01**: Un seul fichier JSON n8n importable (1 workflow)
+- [ ] **PKG-02**: Configuration via variables d'environnement n8n uniquement
+- [ ] **PKG-03**: Guide d'installation clair sur page Notion
+- [ ] **PKG-04**: Compatible WordPress : CF7, WPForms, Elementor Forms (via plugin webhook)
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| Dashboard/CRM pour le client | Les dirigeants ne veulent pas d'outil de plus — zero-interface est le positionnement |
-| Landing pages ou formulaires custom | On se branche sur les Google Ads Lead Forms existants |
-| Gestion des appels entrants (click-to-call) | Source de leads non prioritaire pour v1 |
-| Application mobile | Le SMS/WhatsApp suffit, pas besoin d'app |
-| Intégration CRM tiers (HubSpot, Pipedrive...) | Complexité injustifiée pour des PME qui n'ont pas de CRM |
+| Multi-tenant / multi-clients | Chaque client a sa propre instance — template self-service |
+| WhatsApp | WABA onboarding trop complexe pour un template gratuit |
+| Circuit breaker / monitoring | Overengineering pour un lead magnet |
+| Dashboard / CRM / reporting | Pas le but du template |
+| Google Ads Lead Forms | Pivot vers formulaires WordPress existants |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INGEST-01 | Phase 1 | Complete |
-| INGEST-02 | Phase 1 | Complete |
-| INGEST-03 | Phase 1 | Complete |
-| INGEST-04 | Phase 1 | Complete |
-| RESP-01 | Phase 1 | Complete |
-| RESP-02 | Phase 1 | Complete |
-| RESP-03 | Phase 1 | Complete |
-| RESP-04 | Phase 1 | Complete |
-| RESP-05 | Phase 1 | Complete |
-| NOTIF-01 | Phase 1 | Complete |
-| NOTIF-02 | Phase 1 | Complete |
-| NOTIF-03 | Phase 2 | Complete |
-| NOTIF-04 | Phase 1 | Complete |
-| CONF-01 | Phase 2 | Complete |
-| CONF-02 | Phase 2 | Complete |
-| CONF-03 | Phase 2 | Complete |
+| INGEST-01 | Refactor | Pending |
+| INGEST-02 | Refactor | Pending |
+| INGEST-03 | Refactor | Pending |
+| INGEST-04 | Refactor | Pending |
+| RESP-01 | Refactor | Pending |
+| RESP-02 | Refactor | Pending |
+| RESP-03 | Refactor | Pending |
+| RESP-04 | Refactor | Pending |
+| RESP-05 | Refactor | Pending |
+| NOTIF-01 | Refactor | Pending |
+| NOTIF-02 | Refactor | Pending |
+| NOTIF-03 | Refactor | Pending |
+| NOTIF-04 | Refactor | Pending |
+| NOTIF-05 | Refactor | Pending |
+| PKG-01 | Refactor | Pending |
+| PKG-02 | Refactor | Pending |
+| PKG-03 | Refactor | Pending |
+| PKG-04 | Refactor | Pending |
 
 **Coverage:**
-- v1 requirements: 16 total
-- Mapped to phases: 16
-- Unmapped: 0 ✓
+- v1 requirements: 18 total
+- Mapped to phases: 0
+- Unmapped: 18
 
 ---
-*Requirements defined: 2026-03-27*
-*Last updated: 2026-03-27 after roadmap creation*
+*Requirements defined: 2026-03-28*
+*Last updated: 2026-03-28 after pivot lead magnet + WordPress*

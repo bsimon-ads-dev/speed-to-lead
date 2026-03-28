@@ -1,0 +1,21 @@
+{
+  "_comment": "Per-client configuration for Speed to Lead. All sensitive values (google_key, API keys) must be stored as n8n environment variables and referenced from there — never stored in this file in plain text.",
+  "client_slug": "dupont-plomberie",
+  "business_name": "Dupont Plomberie",
+  "service_type": "plombier",
+  "city": "Paris",
+  "owner_phone": "+33600000000",
+  "owner_email": "contact@dupont-plomberie.fr",
+  "callback_promise_minutes": 30,
+  "active": true,
+  "env_vars_required": {
+    "GOOGLE_KEY": "Shared secret from Google Ads Lead Form settings",
+    "TWILIO_ACCOUNT_SID": "From Twilio Console dashboard",
+    "TWILIO_AUTH_TOKEN": "From Twilio Console dashboard",
+    "TWILIO_SENDER_ID": "Alphanumeric sender ID — e.g. DupontPlomb (max 11 chars, pre-registered with Twilio France)",
+    "ANTHROPIC_API_KEY": "From console.anthropic.com > API Keys",
+    "BREVO_API_KEY": "From app.brevo.com > Settings > API Keys",
+    "BAPTISTE_PHONE": "Baptiste's mobile in E.164 format — receives error fallback SMS"
+  },
+  "_rgpd_note": "RGPD pre-launch requirement: Lead Form must include a pre-unchecked consent checkbox: 'J accepte d etre contacte(e) par SMS par Dupont Plomberie concernant ma demande.' Consent must be collected before first production send."
+}

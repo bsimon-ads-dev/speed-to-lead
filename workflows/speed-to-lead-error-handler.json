@@ -1,0 +1,42 @@
+{
+  "name": "Speed to Lead \u2014 Error Handler",
+  "nodes": [
+    {
+      "id": "node-error-trigger",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "parameters": {}
+    },
+    {
+      "id": "node-format-fallback",
+      "name": "Code: Format Fallback SMS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "parameters": {
+        "jsCode": "// TODO: Plan 04 — read staticData.lastLead + format fallback SMS for Baptiste\nreturn $input.all();"
+      }
+    },
+    {
+      "id": "node-twilio-baptiste",
+      "name": "HTTP Request: Twilio SMS (Baptiste)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [680, 300],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [[{ "node": "Code: Format Fallback SMS", "type": "main", "index": 0 }]]
+    },
+    "Code: Format Fallback SMS": {
+      "main": [[{ "node": "HTTP Request: Twilio SMS (Baptiste)", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

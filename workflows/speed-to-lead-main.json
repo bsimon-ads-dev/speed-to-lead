@@ -1,0 +1,158 @@
+{
+  "name": "Speed to Lead \u2014 Main",
+  "nodes": [
+    {
+      "id": "node-webhook",
+      "name": "Webhook: Google Ads Lead",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "parameters": {
+        "path": "dupont-plomberie",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "webhookId": "speed-to-lead-dupont"
+    },
+    {
+      "id": "node-log-raw",
+      "name": "Code: Log Raw Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "parameters": {
+        "jsCode": "// TODO: Plan 03 — log raw payload + store in staticData for error recovery\nreturn $input.all();"
+      }
+    },
+    {
+      "id": "node-validate-key",
+      "name": "IF: google_key valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [680, 300],
+      "parameters": {}
+    },
+    {
+      "id": "node-dedup",
+      "name": "Remove Duplicates: lead_id",
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 1,
+      "position": [900, 260],
+      "parameters": {}
+    },
+    {
+      "id": "node-extract-fields",
+      "name": "Code: Extract Lead Fields",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 260],
+      "parameters": {
+        "jsCode": "// TODO: Plan 03 — extract user_column_data fields\nreturn $input.all();"
+      }
+    },
+    {
+      "id": "node-claude",
+      "name": "HTTP Request: Claude API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1340, 260],
+      "parameters": {}
+    },
+    {
+      "id": "node-truncate-sms",
+      "name": "Code: Truncate SMS to 155 chars",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 260],
+      "parameters": {
+        "jsCode": "// TODO: Plan 05 — truncate claude output + build owner SMS\nreturn $input.all();"
+      }
+    },
+    {
+      "id": "node-route-channel",
+      "name": "IF: phone available?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1780, 260],
+      "parameters": {}
+    },
+    {
+      "id": "node-twilio-prospect",
+      "name": "HTTP Request: Twilio SMS (Prospect)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [2000, 180],
+      "parameters": {}
+    },
+    {
+      "id": "node-brevo-email",
+      "name": "Brevo: Send Email (Prospect)",
+      "type": "n8n-nodes-base.brevo",
+      "typeVersion": 1,
+      "position": [2000, 380],
+      "parameters": {}
+    },
+    {
+      "id": "node-owner-format",
+      "name": "Code: Format Owner Notification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2220, 180],
+      "parameters": {
+        "jsCode": "// TODO: Plan 06 — format owner SMS with tel: link\nreturn $input.all();"
+      }
+    },
+    {
+      "id": "node-twilio-owner",
+      "name": "HTTP Request: Twilio SMS (Owner)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [2440, 180],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Webhook: Google Ads Lead": {
+      "main": [[{ "node": "Code: Log Raw Payload", "type": "main", "index": 0 }]]
+    },
+    "Code: Log Raw Payload": {
+      "main": [[{ "node": "IF: google_key valid?", "type": "main", "index": 0 }]]
+    },
+    "IF: google_key valid?": {
+      "main": [
+        [{ "node": "Remove Duplicates: lead_id", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Remove Duplicates: lead_id": {
+      "main": [
+        [{ "node": "Code: Extract Lead Fields", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Code: Extract Lead Fields": {
+      "main": [[{ "node": "HTTP Request: Claude API", "type": "main", "index": 0 }]]
+    },
+    "HTTP Request: Claude API": {
+      "main": [[{ "node": "Code: Truncate SMS to 155 chars", "type": "main", "index": 0 }]]
+    },
+    "Code: Truncate SMS to 155 chars": {
+      "main": [[{ "node": "IF: phone available?", "type": "main", "index": 0 }]]
+    },
+    "IF: phone available?": {
+      "main": [
+        [{ "node": "HTTP Request: Twilio SMS (Prospect)", "type": "main", "index": 0 }],
+        [{ "node": "Brevo: Send Email (Prospect)", "type": "main", "index": 0 }]
+      ]
+    },
+    "HTTP Request: Twilio SMS (Prospect)": {
+      "main": [[{ "node": "Code: Format Owner Notification", "type": "main", "index": 0 }]]
+    },
+    "Code: Format Owner Notification": {
+      "main": [[{ "node": "HTTP Request: Twilio SMS (Owner)", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -64,7 +64,13 @@ Plans:
   2. The owner notification is delivered via WhatsApp when their preferred channel is configured as WhatsApp
   3. UptimeRobot alerts Baptiste within 5 minutes if the n8n instance stops responding
   4. More than 5 executions for the same `lead_id` in 10 minutes triggers a halt and alert to Baptiste rather than sending repeated messages
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — WhatsApp config schema + circuit breaker node in Core Workflow
+- [ ] 03-02-PLAN.md — WhatsApp prospect + owner branches in Core Workflow + entry workflow assemblers
+- [ ] 03-03-PLAN.md — Phase 3 test procedures in TESTING.md + UptimeRobot monitor setup checkpoint
+
 **UI hint**: no
 
 ## Progress
@@ -76,4 +82,4 @@ Phases execute in numeric order: 1 → 2 → 3
 |-------|----------------|--------|-----------|
 | 1. Critical Path | 6/6 | Complete   | 2026-03-28 |
 | 2. Follow-up + Multi-tenant | 4/4 | Complete   | 2026-03-28 |
-| 3. WhatsApp + Hardening | 0/TBD | Not started | - |
+| 3. WhatsApp + Hardening | 0/3 | Not started | - |

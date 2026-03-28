@@ -2,6 +2,85 @@
   "name": "Speed to Lead \u2014 Core",
   "nodes": [
     {
+      "id": "node-circuit-breaker",
+      "name": "Code: Circuit Breaker",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 100],
+      "parameters": {
+        "jsCode": "// Phase 3 SC-4: Circuit breaker — halt and alert on >5 same lead_id in 10 min\n// Uses $getWorkflowStaticData('global') — same API as lastLead in Code: Log Raw Payload\nconst lead = $input.first().json;\nconst lead_id = lead.lead_id;\n\nif (!lead_id) return $input.all(); // no lead_id — pass through unchanged\n\nconst staticData = $getWorkflowStaticData('global');\nconst WINDOW_MS = 10 * 60 * 1000; // 10 minutes\nconst THRESHOLD = 5;\nconst now = Date.now();\n\nconst tracker = staticData.circuitBreaker || {};\n\nif (!tracker[lead_id]) {\n  tracker[lead_id] = { count: 0, first_seen: now };\n}\n\nconst entry = tracker[lead_id];\n\n// Reset window if expired\nif (now - entry.first_seen > WINDOW_MS) {\n  entry.count = 0;\n  entry.first_seen = now;\n}\n\nentry.count += 1;\n\n// Prune entries older than 20 minutes to prevent unbounded staticData growth\nfor (const id of Object.keys(tracker)) {\n  if (now - tracker[id].first_seen > 2 * WINDOW_MS) {\n    delete tracker[id];\n  }\n}\n\nstaticData.circuitBreaker = tracker;\n\nif (entry.count > THRESHOLD) {\n  return [{ json: { ...lead, circuit_breaker_tripped: true, cb_count: entry.count } }];\n}\n\nreturn [{ json: { ...lead, circuit_breaker_tripped: false } }];"
+      }
+    },
+    {
+      "id": "node-cb-if",
+      "name": "IF: Circuit Breaker Tripped?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [460, 100],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "condition-cb-tripped",
+              "leftValue": "={{ $json.circuit_breaker_tripped }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "name": "filter.operator.true"
+              }
+            }
+          ]
+        },
+        "looseTypeValidation": false
+      }
+    },
+    {
+      "id": "node-cb-alert",
+      "name": "HTTP Request: Twilio SMS (CB Alert)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [680, 100],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $json.client_config.twilio_account_sid }}/Messages.json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Basic {{ Buffer.from($json.client_config.twilio_account_sid + ':' + $json.client_config.twilio_auth_token).toString('base64') }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "To",
+              "value": "={{ $env.BAPTISTE_PHONE }}"
+            },
+            {
+              "name": "From",
+              "value": "={{ $json.client_config.twilio_sender_id }}"
+            },
+            {
+              "name": "Body",
+              "value": "=ALERTE circuit breaker: lead_id {{ $json.lead_id }} a declenche {{ $json.cb_count }} executions en 10 min. Execution stoppee. Client: {{ $json.client_config.client_slug }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
       "id": "node-subworkflow-trigger",
       "name": "When Executed by Another Workflow",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
@@ -311,7 +390,16 @@
   ],
   "connections": {
     "When Executed by Another Workflow": {
-      "main": [[{ "node": "Code: Log Raw Payload", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Code: Circuit Breaker", "type": "main", "index": 0 }]]
+    },
+    "Code: Circuit Breaker": {
+      "main": [[{ "node": "IF: Circuit Breaker Tripped?", "type": "main", "index": 0 }]]
+    },
+    "IF: Circuit Breaker Tripped?": {
+      "main": [
+        [{ "node": "HTTP Request: Twilio SMS (CB Alert)", "type": "main", "index": 0 }],
+        [{ "node": "Code: Log Raw Payload", "type": "main", "index": 0 }]
+      ]
     },
     "Code: Log Raw Payload": {
       "main": [[{ "node": "Remove Duplicates: lead_id", "type": "main", "index": 0 }]]

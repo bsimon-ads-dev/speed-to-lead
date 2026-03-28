@@ -1,0 +1,14 @@
+{
+  "lead_id": "test-lead-003",
+  "api_version": "1.0",
+  "form_id": "1234567890",
+  "campaign_id": "9876543210",
+  "google_key": "REPLACE_WITH_YOUR_GOOGLE_KEY",
+  "is_test": false,
+  "lead_submit_time": "2026-03-27T10:10:00+00:00",
+  "user_column_data": [
+    { "column_id": "FULL_NAME", "column_name": "FULL_NAME", "string_value": "Sophie Bernard" },
+    { "column_id": "EMAIL", "column_name": "EMAIL", "string_value": "sophie.bernard@example.com" },
+    { "column_id": "demande", "column_name": "demande", "string_value": "Devis pour remplacement robinetterie salle de bain" }
+  ]
+}

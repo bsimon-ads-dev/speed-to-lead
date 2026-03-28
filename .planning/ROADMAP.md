@@ -34,7 +34,7 @@ Plans:
 - [x] 01-01-PLAN.md — Test fixture library: 4 JSON payloads + shell test runner + testing guide
 - [x] 01-02-PLAN.md — Project scaffold: client config JSON, n8n workflow skeletons, Claude prompt template
 - [x] 01-03-PLAN.md — Ingestion layer: webhook (200 immediately) + raw log + google_key validation + dedup + field extraction
-- [ ] 01-04-PLAN.md — Error handler workflow: Error Trigger + fallback SMS to Baptiste via Twilio
+- [x] 01-04-PLAN.md — Error handler workflow: Error Trigger + fallback SMS to Baptiste via Twilio
 - [ ] 01-05-PLAN.md — AI + channel dispatch: Claude API call + SMS truncation + Twilio prospect SMS + Brevo email
 - [ ] 01-06-PLAN.md — Owner notification + wiring: owner SMS with tel: link + error workflow link + end-to-end verification
 

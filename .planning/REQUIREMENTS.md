@@ -25,7 +25,7 @@
 - [ ] **NOTIF-01**: Le dirigeant reçoit un SMS/WhatsApp avec les infos clés du lead (nom, demande, téléphone)
 - [ ] **NOTIF-02**: La notification contient un lien `tel:` permettant de rappeler le prospect en un clic
 - [ ] **NOTIF-03**: Si le dirigeant n'a pas rappelé après un délai configurable, le prospect reçoit une relance automatique
-- [ ] **NOTIF-04**: En cas d'erreur du pipeline, Baptiste reçoit le lead brut en fallback
+- [x] **NOTIF-04**: En cas d'erreur du pipeline, Baptiste reçoit le lead brut en fallback
 
 ### Configuration
 
@@ -76,7 +76,7 @@
 | NOTIF-01 | Phase 1 | Pending |
 | NOTIF-02 | Phase 1 | Pending |
 | NOTIF-03 | Phase 2 | Pending |
-| NOTIF-04 | Phase 1 | Pending |
+| NOTIF-04 | Phase 1 | Complete |
 | CONF-01 | Phase 2 | Pending |
 | CONF-02 | Phase 2 | Pending |
 | CONF-03 | Phase 2 | Pending |

@@ -1,0 +1,445 @@
+{
+  "name": "Speed to Lead",
+  "nodes": [
+    {
+      "id": "node-webhook",
+      "name": "Webhook: Form Lead",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "parameters": {
+        "path": "speed-to-lead",
+        "responseMode": "onReceived",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "webhookId": "speed-to-lead"
+    },
+    {
+      "id": "node-validate-secret",
+      "name": "IF: Webhook Secret Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "condition-secret",
+              "leftValue": "={{ $request.headers['x-webhook-secret'] }}",
+              "rightValue": "={{ $env.WEBHOOK_SECRET }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ]
+        },
+        "looseTypeValidation": false
+      }
+    },
+    {
+      "id": "node-log-raw",
+      "name": "Code: Log Raw + Store for Fallback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300],
+      "parameters": {
+        "jsCode": "// Log payload brut et stocker pour fallback erreur\nconst lead = $input.first().json;\nconsole.log('RAW_LEAD:', JSON.stringify(lead));\n\nconst staticData = $getWorkflowStaticData('global');\nstaticData.lastLead = JSON.stringify(lead);\nstaticData.lastLeadTime = new Date().toISOString();\n\nreturn $input.all();"
+      }
+    },
+    {
+      "id": "node-dedup",
+      "name": "Remove Duplicates",
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 1,
+      "position": [900, 300],
+      "parameters": {
+        "operation": "removeItemsSeenInPreviousExecutions",
+        "deduplicationKey": "={{ ($json.email || '') + '|' + ($json.phone || '') }}",
+        "options": {
+          "historySize": 5000
+        }
+      }
+    },
+    {
+      "id": "node-normalize",
+      "name": "Code: Normalize Fields",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 300],
+      "parameters": {
+        "jsCode": "// Normalise les champs du formulaire WordPress\n// Compatible CF7, WPForms, Elementor, Gravity Forms\nconst raw = $input.first().json;\n\n// Chercher les champs par noms courants (case-insensitive)\nconst find = (keys) => {\n  for (const key of Object.keys(raw)) {\n    if (keys.includes(key.toLowerCase())) return raw[key];\n  }\n  return null;\n};\n\nconst name = find(['name', 'nom', 'your-name', 'full_name', 'fullname', 'prenom', 'first_name'])\n  || find(['your_name', 'field_name', 'wpforms[fields][0]'])\n  || 'Prospect';\n\nconst phone = find(['phone', 'tel', 'telephone', 'your-phone', 'mobile', 'phone_number'])\n  || find(['your_tel', 'field_phone', 'wpforms[fields][2]'])\n  || null;\n\nconst email = find(['email', 'mail', 'your-email', 'e-mail', 'email_address'])\n  || find(['your_email', 'field_email', 'wpforms[fields][1]'])\n  || null;\n\nconst message = find(['message', 'demande', 'your-message', 'description', 'comments', 'details'])\n  || find(['your_message', 'field_message', 'wpforms[fields][3]', 'textarea-1'])\n  || '';\n\nreturn [{\n  json: {\n    name,\n    phone,\n    email,\n    message,\n    raw\n  }\n}];"
+      }
+    },
+    {
+      "id": "node-claude",
+      "name": "HTTP Request: Claude API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1340, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-api-key",
+              "value": "={{ $env.ANTHROPIC_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"model\": \"claude-haiku-4-5\",\n  \"max_tokens\": 200,\n  \"system\": \"Tu travailles pour {{ $env.BUSINESS_NAME }}, {{ $env.SERVICE_TYPE }} bas\u00e9(e) \u00e0 {{ $env.CITY }}.\\n\\nUn prospect vient de soumettre un formulaire de contact sur le site web.\\n\\nTa mission : r\u00e9diger UN SMS de confirmation en fran\u00e7ais.\\n\\nR\u00e8gles STRICTES :\\n- Le SMS doit faire STRICTEMENT MOINS DE 160 caract\u00e8res (espaces compris)\\n- Reformule en une phrase la demande sp\u00e9cifique du prospect (ce qu'il a \u00e9crit)\\n- Confirme qu'on le rappelle sous {{ $env.CALLBACK_MINUTES }} minutes\\n- N'invente AUCUN prix, d\u00e9lai exact, ni disponibilit\u00e9 non confirm\u00e9e\\n- N'ajoute AUCUNE formule de politesse, signature, ou introduction\\n- Commence DIRECTEMENT par le contenu du SMS\\n\\nExemple acceptable (150 caract\u00e8res) :\\n\\\"Bonjour Marie, votre fuite d'eau sous l'\u00e9vier : notre plombier vous rappelle sous 30 minutes. Dupont Plomberie.\\\"\\n\\nExemple interdit (trop long, prix invent\u00e9) :\\n\\\"Bonjour Marie, nous avons bien re\u00e7u votre demande concernant une fuite. Notre plombier qualifi\u00e9 vous contactera dans les 30 minutes pour intervenir au prix de 80\u20ac de l'heure. Dupont Plomberie.\\\"\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"<prospect_input>Nom: {{ $json.name }}\\nDemande: {{ $json.message }}</prospect_input>\"\n    }\n  ]\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "node-truncate",
+      "name": "Code: Truncate SMS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 300],
+      "parameters": {
+        "jsCode": "// Extraire le message Claude et tronquer a 155 chars\nconst claudeOutput = $json.content?.[0]?.text || '';\nconst sms = claudeOutput.length > 155\n  ? claudeOutput.substring(0, 152) + '...'\n  : claudeOutput;\n\nreturn [{\n  json: {\n    name: $('Code: Normalize Fields').first().json.name,\n    phone: $('Code: Normalize Fields').first().json.phone,\n    email: $('Code: Normalize Fields').first().json.email,\n    message: $('Code: Normalize Fields').first().json.message,\n    sms,\n    raw: $('Code: Normalize Fields').first().json.raw\n  }\n}];"
+      }
+    },
+    {
+      "id": "node-if-phone",
+      "name": "IF: Phone Available?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1780, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "condition-phone",
+              "leftValue": "={{ $json.phone }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty",
+                "name": "filter.operator.isNotEmpty"
+              }
+            }
+          ]
+        },
+        "looseTypeValidation": true
+      }
+    },
+    {
+      "id": "node-twilio-prospect",
+      "name": "Twilio: SMS Prospect",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [2000, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $env.TWILIO_ACCOUNT_SID }}/Messages.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "To",
+              "value": "={{ $json.phone }}"
+            },
+            {
+              "name": "From",
+              "value": "={{ $env.TWILIO_SENDER_ID }}"
+            },
+            {
+              "name": "Body",
+              "value": "={{ $json.sms }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "_setup_notes": "Apres import: creer un credential 'HTTP Basic Auth' dans n8n avec Username = TWILIO_ACCOUNT_SID et Password = TWILIO_AUTH_TOKEN, puis le selectionner dans ce noeud."
+    },
+    {
+      "id": "node-brevo-email",
+      "name": "Brevo: Email Prospect",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [2000, 420],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.brevo.com/v3/smtp/email",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "api-key",
+              "value": "={{ $env.BREVO_API_KEY }}"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"sender\": { \"name\": \"{{ $env.BUSINESS_NAME }}\", \"email\": \"{{ $env.BREVO_SENDER_EMAIL }}\" },\n  \"to\": [{ \"email\": \"{{ $json.email }}\" }],\n  \"subject\": \"Votre demande \u2014 {{ $env.BUSINESS_NAME }}\",\n  \"htmlContent\": \"<p>{{ $json.sms }}</p><br><p style='color:#666;font-size:12px;'>{{ $env.BUSINESS_NAME }}</p>\"\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "node-owner-format",
+      "name": "Code: Format Owner SMS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2220, 300],
+      "parameters": {
+        "jsCode": "// Notification dirigeant avec lien tel: pour rappel en 1 clic\nconst name = $json.name || 'Prospect';\nconst message = $json.message || '';\nconst phone = $json.phone || null;\nconst email = $json.email || 'non fourni';\n\nlet ownerSms;\nif (phone) {\n  ownerSms = `Nouveau lead: ${name}\\n\"${message.substring(0, 60)}\"\\nAppeler: tel:${phone}`;\n} else {\n  ownerSms = `Nouveau lead: ${name}\\n\"${message.substring(0, 60)}\"\\nEmail: ${email}\\n(Pas de tel)`;\n}\n\nreturn [{\n  json: {\n    ...($input.first().json),\n    owner_sms: ownerSms.substring(0, 320)\n  }\n}];"
+      }
+    },
+    {
+      "id": "node-twilio-owner",
+      "name": "Twilio: SMS Dirigeant",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [2440, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $env.TWILIO_ACCOUNT_SID }}/Messages.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "To",
+              "value": "={{ $env.OWNER_PHONE }}"
+            },
+            {
+              "name": "From",
+              "value": "={{ $env.TWILIO_SENDER_ID }}"
+            },
+            {
+              "name": "Body",
+              "value": "={{ $json.owner_sms }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "node-wait",
+      "name": "Wait: Follow-up Delay",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [2660, 300],
+      "parameters": {
+        "resume": "timeInterval",
+        "unit": "minutes",
+        "amount": "={{ $env.FOLLOWUP_DELAY_MINUTES || 45 }}"
+      }
+    },
+    {
+      "id": "node-biz-hours",
+      "name": "Code: Business Hours Check",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2880, 300],
+      "parameters": {
+        "jsCode": "// Verifier heures ouvrables (lun-sam 08h-20h, Paris)\nconst now = $now.setZone('Europe/Paris');\nconst ok = now.weekday >= 1 && now.weekday <= 6 && now.hour >= 8 && now.hour < 20;\nreturn [{ json: { ...$input.first().json, business_hours_ok: ok } }];"
+      }
+    },
+    {
+      "id": "node-if-biz-hours",
+      "name": "IF: Business Hours?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [3100, 300],
+      "parameters": {
+        "conditions": {
+          "options": { "leftValue": "", "caseSensitive": true, "typeValidation": "strict" },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "condition-biz",
+              "leftValue": "={{ $json.business_hours_ok }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "name": "filter.operator.true"
+              }
+            }
+          ]
+        },
+        "looseTypeValidation": false
+      }
+    },
+    {
+      "id": "node-twilio-followup",
+      "name": "Twilio: SMS Relance",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [3320, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $env.TWILIO_ACCOUNT_SID }}/Messages.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "To", "value": "={{ $json.phone }}" },
+            { "name": "From", "value": "={{ $env.TWILIO_SENDER_ID }}" },
+            { "name": "Body", "value": "=Toujours disponible pour votre demande ? {{ $env.BUSINESS_NAME }} peut vous rappeler maintenant." }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "node-error-trigger",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [240, 600],
+      "parameters": {}
+    },
+    {
+      "id": "node-error-format",
+      "name": "Code: Format Fallback SMS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 600],
+      "parameters": {
+        "jsCode": "// Recuperer le dernier lead depuis staticData et envoyer en fallback\nconst staticData = $getWorkflowStaticData('global');\nlet fallback = 'ERREUR Speed to Lead — pas de donnees lead disponibles.';\n\ntry {\n  if (staticData.lastLead) {\n    const lead = JSON.parse(staticData.lastLead);\n    const name = lead.name || lead.nom || 'Inconnu';\n    const phone = lead.phone || lead.tel || 'N/A';\n    const email = lead.email || 'N/A';\n    fallback = `ERREUR Speed to Lead\\nLead: ${name}\\nTel: ${phone}\\nEmail: ${email}\\nTraiter manuellement.`;\n  }\n} catch(e) {\n  fallback = `ERREUR Speed to Lead — donnees corrompues: ${staticData.lastLead?.substring(0, 80)}`;\n}\n\nreturn [{ json: { fallback_sms: fallback.substring(0, 320) } }];"
+      }
+    },
+    {
+      "id": "node-error-sms",
+      "name": "Twilio: SMS Fallback Dirigeant",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [680, 600],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $env.TWILIO_ACCOUNT_SID }}/Messages.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "To", "value": "={{ $env.OWNER_PHONE }}" },
+            { "name": "From", "value": "={{ $env.TWILIO_SENDER_ID }}" },
+            { "name": "Body", "value": "={{ $json.fallback_sms }}" }
+          ]
+        },
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Webhook: Form Lead": {
+      "main": [[{ "node": "IF: Webhook Secret Valid?", "type": "main", "index": 0 }]]
+    },
+    "IF: Webhook Secret Valid?": {
+      "main": [
+        [{ "node": "Code: Log Raw + Store for Fallback", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Code: Log Raw + Store for Fallback": {
+      "main": [[{ "node": "Remove Duplicates", "type": "main", "index": 0 }]]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [{ "node": "Code: Normalize Fields", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Code: Normalize Fields": {
+      "main": [[{ "node": "HTTP Request: Claude API", "type": "main", "index": 0 }]]
+    },
+    "HTTP Request: Claude API": {
+      "main": [[{ "node": "Code: Truncate SMS", "type": "main", "index": 0 }]]
+    },
+    "Code: Truncate SMS": {
+      "main": [[{ "node": "IF: Phone Available?", "type": "main", "index": 0 }]]
+    },
+    "IF: Phone Available?": {
+      "main": [
+        [{ "node": "Twilio: SMS Prospect", "type": "main", "index": 0 }],
+        [{ "node": "Brevo: Email Prospect", "type": "main", "index": 0 }]
+      ]
+    },
+    "Twilio: SMS Prospect": {
+      "main": [[{ "node": "Code: Format Owner SMS", "type": "main", "index": 0 }]]
+    },
+    "Brevo: Email Prospect": {
+      "main": [[{ "node": "Code: Format Owner SMS", "type": "main", "index": 0 }]]
+    },
+    "Code: Format Owner SMS": {
+      "main": [[{ "node": "Twilio: SMS Dirigeant", "type": "main", "index": 0 }]]
+    },
+    "Twilio: SMS Dirigeant": {
+      "main": [[{ "node": "Wait: Follow-up Delay", "type": "main", "index": 0 }]]
+    },
+    "Wait: Follow-up Delay": {
+      "main": [[{ "node": "Code: Business Hours Check", "type": "main", "index": 0 }]]
+    },
+    "Code: Business Hours Check": {
+      "main": [[{ "node": "IF: Business Hours?", "type": "main", "index": 0 }]]
+    },
+    "IF: Business Hours?": {
+      "main": [
+        [{ "node": "Twilio: SMS Relance", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "Error Trigger": {
+      "main": [[{ "node": "Code: Format Fallback SMS", "type": "main", "index": 0 }]]
+    },
+    "Code: Format Fallback SMS": {
+      "main": [[{ "node": "Twilio: SMS Fallback Dirigeant", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true
+  },
+  "_setup_notes": {
+    "1_credentials": "Creer un credential 'HTTP Basic Auth' avec Username = votre TWILIO_ACCOUNT_SID et Password = votre TWILIO_AUTH_TOKEN. Le selectionner dans les 4 noeuds Twilio.",
+    "2_error_workflow": "Aller dans Settings > Error Workflow et selectionner ce meme workflow 'Speed to Lead'.",
+    "3_variables": "Configurer toutes les variables d'environnement listees dans le README avant d'activer le workflow."
+  }
+}

@@ -1,214 +1,198 @@
 # Speed to Lead
 
-Automatisation qui **repond instantanement aux leads Google Ads** pour les PME de services locaux (plombiers, dentistes, avocats, coachs...).
+Template n8n gratuit qui **repond automatiquement aux leads de votre site web** en moins de 2 minutes.
 
-Quand un prospect remplit un formulaire Google Ads, le systeme :
+Quand un prospect remplit le formulaire de votre site WordPress, le systeme :
 
-1. Envoie un **SMS personnalise par IA** au prospect en moins de 2 minutes ("Bonjour Marie, votre fuite d'eau sous l'evier : notre plombier vous rappelle sous 30 minutes.")
-2. Envoie une **notification SMS au dirigeant** avec les infos du lead et un lien pour rappeler en un clic
-3. **Relance automatiquement** le prospect si le dirigeant n'a pas rappele apres un delai configurable
-4. Si quelque chose plante, **Baptiste recoit le lead brut** par SMS — aucun lead n'est perdu
+1. **Envoie un SMS personnalise par IA** au prospect ("Bonjour Marie, votre fuite d'eau sous l'evier : notre plombier vous rappelle sous 30 minutes.")
+2. **Vous envoie une notification SMS** avec les infos du lead et un lien pour rappeler en un clic
+3. **Relance automatiquement** le prospect si vous n'avez pas rappele apres un delai que vous choisissez
+4. Si quelque chose plante, **vous recevez le lead brut par SMS** — aucun lead n'est perdu
 
-## Ce qu'il faut
-
-- Un compte [n8n](https://n8n.io) (auto-heberge sur Railway recommande, ou n8n Cloud)
-- Un compte [Twilio](https://twilio.com) (pour envoyer les SMS)
-- Un compte [Brevo](https://brevo.com) (pour envoyer les emails — gratuit jusqu'a 300/jour)
-- Une cle API [Claude](https://console.anthropic.com) (pour generer les messages personnalises — environ 0.001 EUR/lead)
-- Des campagnes Google Ads avec des Lead Forms
-
-**Cout par client :** environ 10-12 EUR/mois pour 30 leads.
+Compatible avec **Contact Form 7**, **WPForms**, **Elementor Forms** et tout plugin WordPress qui supporte les webhooks.
 
 ---
 
-## Mise en place pas a pas
+## Ce qu'il vous faut
 
-### Etape 1 : Installer n8n
+| Service | A quoi ca sert | Cout |
+|---------|----------------|------|
+| [n8n](https://n8n.io) | L'outil qui fait tourner l'automatisation | Gratuit (self-hosted) ou ~20 EUR/mois (cloud) |
+| [Twilio](https://twilio.com) | Envoyer les SMS | ~0.08 EUR/SMS |
+| [Brevo](https://brevo.com) | Envoyer les emails (si pas de telephone) | Gratuit (300 emails/jour) |
+| [Claude API](https://console.anthropic.com) | Generer les messages personnalises | ~0.001 EUR/lead |
 
-**Option recommandee — Railway (5-7 EUR/mois, illimite) :**
+**Cout total :** environ 3-5 EUR/mois pour 30 leads.
 
+---
+
+## Installation pas a pas
+
+### Etape 1 : Creer un compte n8n
+
+**Option A — n8n Cloud (plus simple, payant) :**
+1. Aller sur [n8n.io/cloud](https://n8n.io/cloud)
+2. Creer un compte
+3. Noter votre URL (ex: `https://votre-nom.app.n8n.cloud`)
+
+**Option B — Self-hosted sur Railway (moins cher) :**
 1. Aller sur [railway.app](https://railway.app)
 2. Creer un compte
-3. Chercher "n8n" dans les templates
-4. Cliquer "Deploy" — n8n est installe en 5 minutes
-5. Noter l'URL de votre instance (ex: `https://n8n-production-xxxx.up.railway.app`)
-
-**Option alternative — n8n Cloud (20 EUR/mois) :**
-
-1. Aller sur [n8n.io/cloud](https://n8n.io/cloud)
-2. Creer un compte et choisir un plan
-3. L'URL est fournie directement
+3. Chercher "n8n" dans les templates et cliquer "Deploy"
+4. Attendre 5 minutes, noter votre URL
 
 ### Etape 2 : Creer les comptes de services
 
-**Twilio (SMS) :**
-
+**Twilio (pour les SMS) :**
 1. Creer un compte sur [twilio.com](https://twilio.com)
-2. Aller dans "Messaging" > "Senders" > "Alphanumeric Sender ID"
-3. Enregistrer un nom d'expediteur pour la France (ex: "DupontPlomb" — max 11 caracteres)
-4. Acheter un numero de telephone francais (environ 1 EUR/mois)
-5. Noter votre **Account SID** et **Auth Token** (visibles sur le dashboard)
+2. Acheter un numero de telephone francais (~1 EUR/mois)
+3. Ou enregistrer un "Alphanumeric Sender ID" (ex: "VotreSociete", max 11 caracteres)
+4. Noter votre **Account SID** et **Auth Token** depuis le dashboard
 
-**Brevo (Email) :**
-
+**Brevo (pour les emails) :**
 1. Creer un compte gratuit sur [brevo.com](https://brevo.com)
-2. Aller dans "Settings" > "SMTP & API" > "API Keys"
-3. Creer une cle API et la noter
+2. Aller dans Settings > SMTP & API > API Keys
+3. Creer et noter votre cle API
 
-**Claude (IA) :**
-
+**Claude (pour l'IA) :**
 1. Aller sur [console.anthropic.com](https://console.anthropic.com)
-2. Creer un compte et ajouter un moyen de paiement
-3. Aller dans "API Keys" et creer une cle
-4. **Recommande :** Aller dans "Settings" > "Limits" et fixer un plafond a 20 EUR/mois
+2. Creer un compte, ajouter un moyen de paiement
+3. Creer une cle API dans "API Keys"
+4. (Recommande) Fixer un plafond a 5 EUR/mois dans Settings > Limits
 
-### Etape 3 : Configurer les variables d'environnement dans n8n
+### Etape 3 : Importer le workflow dans n8n
 
-Dans n8n, aller dans **Settings** > **Variables** (ou Environment Variables sur Railway).
+1. Telecharger le fichier `speed-to-lead.json` (dans le dossier `workflows/`)
+2. Dans n8n, cliquer sur le menu **"..."** en haut a droite > **"Import from file"**
+3. Selectionner le fichier `speed-to-lead.json`
+4. Le workflow apparait avec tous les noeuds pre-configures
 
-Ajouter ces variables pour chaque client. Exemple pour le client "Dupont Plomberie" :
+### Etape 4 : Configurer les credentials Twilio
 
-| Variable | Valeur | Ou la trouver |
-|----------|--------|---------------|
-| `DUPONT_GOOGLE_KEY` | Le secret partage de votre Lead Form | Google Ads > Formulaire > Webhook |
-| `DUPONT_TWILIO_ACCOUNT_SID` | `ACxxxxxxx...` | Dashboard Twilio |
-| `DUPONT_TWILIO_AUTH_TOKEN` | `xxxxxxx...` | Dashboard Twilio |
-| `DUPONT_TWILIO_SENDER_ID` | `DupontPlomb` | Twilio > Alphanumeric Sender |
-| `ANTHROPIC_API_KEY` | `sk-ant-...` | Console Anthropic (partage entre clients) |
-| `BREVO_API_KEY` | `xkeysib-...` | Brevo > API Keys (partage entre clients) |
-| `BAPTISTE_PHONE` | `+336XXXXXXXX` | Votre numero perso au format international |
+1. Dans n8n, aller dans **Settings** > **Credentials**
+2. Cliquer **"Add credential"** > choisir **"HTTP Basic Auth"**
+3. Remplir :
+   - **Username** = votre Twilio Account SID (commence par `AC...`)
+   - **Password** = votre Twilio Auth Token
+4. Sauvegarder
+5. Ouvrir chacun des 4 noeuds Twilio dans le workflow (ils s'appellent "Twilio: ...")
+6. Dans chaque noeud, selectionner le credential que vous venez de creer
 
-Pour un deuxieme client, remplacer `DUPONT_` par le prefixe du client (ex: `MARTIN_`).
+### Etape 5 : Configurer les variables d'environnement
 
-### Etape 4 : Importer les workflows dans n8n
+Dans n8n, aller dans **Settings** > **Variables** et ajouter :
 
-1. Dans n8n, cliquer sur **"..."** > **"Import from file"**
-2. Importer les fichiers suivants **dans cet ordre** :
-   - `workflows/speed-to-lead-error-handler.json` (en premier)
-   - `workflows/speed-to-lead-core.json` (en deuxieme)
-   - `workflows/speed-to-lead-entry-dupont-plomberie.json` (un par client)
+| Variable | Valeur | Description |
+|----------|--------|-------------|
+| `WEBHOOK_SECRET` | Un mot de passe de votre choix | Securise le webhook (ex: `mon-secret-123`) |
+| `TWILIO_ACCOUNT_SID` | `ACxxxxxxx...` | Depuis le dashboard Twilio |
+| `TWILIO_SENDER_ID` | `+33...` ou `VotreSociete` | Numero ou nom d'expediteur Twilio |
+| `ANTHROPIC_API_KEY` | `sk-ant-...` | Depuis console.anthropic.com |
+| `BREVO_API_KEY` | `xkeysib-...` | Depuis Brevo > API Keys |
+| `BREVO_SENDER_EMAIL` | `contact@votre-site.fr` | L'email d'expedition pour Brevo |
+| `OWNER_PHONE` | `+33600000000` | Votre numero de telephone (format international) |
+| `BUSINESS_NAME` | `Dupont Plomberie` | Le nom de votre entreprise |
+| `SERVICE_TYPE` | `plombier` | Votre metier (adapte le ton du SMS) |
+| `CITY` | `Paris` | Votre ville |
+| `CALLBACK_MINUTES` | `30` | Delai promis au prospect ("on vous rappelle sous X min") |
+| `FOLLOWUP_DELAY_MINUTES` | `45` | Delai avant relance automatique (en minutes) |
 
-3. **Apres l'import du Core Workflow :**
-   - Aller dans Settings > Error Workflow
-   - Selectionner "Speed to Lead — Error Handler"
+### Etape 6 : Configurer le error handler
 
-4. **Apres l'import de chaque Entry Workflow :**
-   - Ouvrir le noeud "Execute: Core Workflow"
-   - Verifier qu'il pointe vers le workflow "Speed to Lead — Core"
-   - Creer un credential "HTTP Basic Auth" pour Twilio (Account SID = username, Auth Token = password)
+1. Dans le workflow, cliquer sur **Settings** (icone engrenage en haut)
+2. Dans **"Error Workflow"**, selectionner **"Speed to Lead"** (ce meme workflow)
+3. Sauvegarder
 
-5. **Activer les workflows** (bouton ON/OFF en haut a droite) :
-   - Activer l'Error Handler
-   - Activer le Core Workflow
-   - Activer chaque Entry Workflow
+### Etape 7 : Connecter votre formulaire WordPress
 
-### Etape 5 : Connecter Google Ads
+Le webhook attend des donnees en JSON. Votre formulaire WordPress doit envoyer les soumissions vers l'URL :
 
-1. Dans Google Ads, ouvrir votre campagne
-2. Aller dans le **formulaire de lead** (Lead Form Extension)
-3. Dans les parametres du formulaire, activer le **Webhook**
-4. Entrer l'URL du webhook :
-   ```
-   https://votre-instance-n8n.up.railway.app/webhook/dupont-plomberie
-   ```
-5. Entrer la **Google Key** (le meme secret que `DUPONT_GOOGLE_KEY`)
-6. Envoyer un lead test depuis Google Ads pour verifier
-
-### Etape 6 : Tester
-
-Utiliser le script de test fourni :
-
-```bash
-# Tester avec le client par defaut (dupont-plomberie)
-bash tests/test-webhook.sh https://votre-instance-n8n.up.railway.app
-
-# Tester avec un autre client
-bash tests/test-webhook.sh https://votre-instance-n8n.up.railway.app cabinet-martin
+```
+https://votre-instance-n8n/webhook/speed-to-lead
 ```
 
-Verifier que :
-- Le prospect recoit un SMS personnalise en moins de 2 minutes
-- Le dirigeant recoit un SMS avec les infos du lead
-- Un lead envoye 2 fois ne genere qu'un seul SMS
+**Avec Contact Form 7 :**
+- Installer le plugin [CF7 to Webhook](https://wordpress.org/plugins/cf7-to-webhook/)
+- Dans les parametres du formulaire, ajouter l'URL webhook
+- Ajouter le header : `X-Webhook-Secret: votre-secret`
 
-### Etape 7 : Monitoring (recommande)
+**Avec WPForms :**
+- Installer le plugin [WP Webhooks](https://wordpress.org/plugins/wp-webhooks/)
+- Creer un webhook "Send Data" sur l'evenement "Form submitted"
+- URL = votre webhook, ajouter le header secret
 
-**UptimeRobot (gratuit) :**
+**Avec Elementor Forms :**
+- Dans l'action apres soumission, ajouter "Webhook"
+- Coller l'URL du webhook
+- Ajouter le header `X-Webhook-Secret` dans les options avancees
 
-1. Creer un compte sur [uptimerobot.com](https://uptimerobot.com)
-2. Ajouter un monitor HTTP(S) pointant vers votre URL webhook
-3. Configurer l'alerte email — vous serez prevenu en 5 min si n8n tombe
+Les champs du formulaire doivent s'appeler `name` (ou `nom`), `phone` (ou `tel`), `email`, `message` (ou `demande`). Le workflow reconnait automatiquement les variantes courantes.
+
+### Etape 8 : Activer et tester
+
+1. **Activer le workflow** (bouton ON/OFF en haut a droite de n8n)
+2. Remplir votre propre formulaire WordPress avec un faux lead
+3. Verifier que :
+   - Le prospect (vous) recoit un SMS personnalise
+   - Le dirigeant (vous) recoit un SMS avec les infos du lead
+   - Le SMS contient un lien `tel:` cliquable
 
 ---
 
-## Ajouter un nouveau client
+## Comment ca marche
 
-1. **Copier** un fichier config existant dans `config/` et l'adapter (nom, ville, metier, delais)
-2. **Copier** un fichier entry workflow existant dans `workflows/` et remplacer :
-   - Le slug dans le webhook (ex: `cabinet-martin`)
-   - Le prefixe des variables d'environnement (ex: `MARTIN_`)
-   - Les valeurs non-sensibles (nom entreprise, ville, metier)
-3. **Ajouter** les variables d'environnement du nouveau client dans n8n
-4. **Importer** le nouveau entry workflow dans n8n
-5. **Connecter** le webhook dans Google Ads
-6. **Activer** le workflow
-
-Le Core Workflow n'a pas besoin d'etre modifie — il est partage entre tous les clients.
+```
+Formulaire WordPress
+        |
+        v
+   [Webhook n8n]
+        |
+   Verifie le secret
+        |
+   Deduplication
+        |
+   Claude AI genere
+   un SMS personnalise
+        |
+   +---------+---------+
+   |                   |
+   v                   v
+Tel dispo?          Email seulement
+   |                   |
+SMS Twilio        Email Brevo
+   |                   |
+   +------- + ---------+
+            |
+    SMS au dirigeant
+    (avec lien tel:)
+            |
+     Attend X minutes
+            |
+    Heures ouvrables ?
+      Oui → Relance SMS
+      Non → Rien
+```
 
 ---
 
-## Structure des fichiers
+## En cas de probleme
 
-```
-speed-to-lead/
-├── workflows/
-│   ├── speed-to-lead-core.json           # Workflow principal (partage)
-│   ├── speed-to-lead-error-handler.json  # Fallback erreur
-│   ├── speed-to-lead-entry-dupont-plomberie.json   # Client 1
-│   └── speed-to-lead-entry-cabinet-martin.json     # Client 2
-├── config/
-│   ├── dupont-plomberie.json             # Config client 1
-│   └── cabinet-martin.json              # Config client 2
-├── prompts/
-│   └── prospect-sms-fr.txt             # Prompt IA pour generer les SMS
-└── tests/
-    ├── payloads/                        # Donnees de test
-    ├── test-webhook.sh                  # Script de test
-    └── TESTING.md                       # Guide de test detaille
-```
-
-## Configuration par client
-
-Chaque client a un fichier JSON dans `config/` avec :
-
-| Champ | Description | Exemple |
-|-------|-------------|---------|
-| `client_slug` | Identifiant unique (dans l'URL webhook) | `dupont-plomberie` |
-| `business_name` | Nom de l'entreprise | `Dupont Plomberie` |
-| `service_type` | Metier (adapte le ton du SMS) | `plombier` |
-| `city` | Ville | `Paris` |
-| `owner_phone` | Telephone du dirigeant | `+33600000000` |
-| `callback_promise_minutes` | Delai promis au prospect | `30` |
-| `follow_up_delay_minutes` | Delai avant relance auto | `45` |
-| `follow_up_enabled` | Activer la relance | `true` |
-
-## RGPD
-
-Le formulaire Google Ads de chaque client **doit** inclure une case a cocher (non pre-cochee) :
-
-> "J'accepte d'etre contacte(e) par SMS par [Nom Entreprise] concernant ma demande."
-
-Cette case est **obligatoire** avant la mise en production. Sans consentement explicite, l'envoi de SMS commerciaux en France est illegal (CNIL/CPCE).
-
-## WhatsApp (optionnel)
-
-Pour activer WhatsApp sur un client :
-
-1. Enregistrer un numero WhatsApp Business via Twilio (WABA)
-2. Soumettre un template de message a Meta pour approbation (1-3 jours)
-3. Ajouter les variables `CLIENTSLUG_WHATSAPP_SENDER` et `CLIENTSLUG_WHATSAPP_TEMPLATE_SID` dans n8n
-4. Passer `whatsapp_enabled` a `true` dans la config du client
+| Symptome | Solution |
+|----------|----------|
+| Le webhook ne recoit rien | Verifier que le workflow est **active** (pas juste ouvert) |
+| "Invalid secret" | Verifier que le header `X-Webhook-Secret` correspond a la variable `WEBHOOK_SECRET` |
+| Pas de SMS | Verifier le credential Twilio (Account SID + Auth Token) et le solde du compte |
+| SMS trop long ou bizarre | Verifier que `BUSINESS_NAME`, `SERVICE_TYPE` et `CITY` sont bien remplis |
+| Le prospect recoit 2 SMS | Normal au premier test — la deduplication marche sur les prochains envois identiques |
+| Erreur Claude | Verifier la cle API et le solde sur console.anthropic.com |
 
 ---
 
-**Developpe par Baptiste Simon** — Media Buyer Google/Meta Ads + Automatisations IA
+## Besoin d'aide ?
+
+Ce template est gratuit et open-source. Si vous avez besoin d'aide pour :
+- L'installer et le configurer
+- L'adapter a votre activite
+- Ajouter des fonctionnalites (WhatsApp, multi-sites, reporting...)
+
+Contactez-moi : **Baptiste Simon** — Media Buyer & Automatisations IA

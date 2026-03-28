@@ -1,69 +1,49 @@
-#!/usr/bin/env bash
-# Speed to Lead — Webhook Test Runner
-# Usage: GOOGLE_KEY=<key> ./tests/test-webhook.sh [scenario] [slug]
-# slug defaults to 'dupont-plomberie' if not provided
+#!/bin/bash
+# Speed to Lead — Test Script
+# Usage: bash tests/test-webhook.sh <n8n-url> <webhook-secret>
+#
 # Examples:
-#   GOOGLE_KEY=key ./tests/test-webhook.sh happy
-#   GOOGLE_KEY=key ./tests/test-webhook.sh happy cabinet-martin
-#   GOOGLE_KEY=key ./tests/test-webhook.sh all cabinet-martin
-# Scenarios: happy | duplicate | invalid-key | email-only | all (default: all)
+#   bash tests/test-webhook.sh https://n8n.example.com mysecret123
+#   bash tests/test-webhook.sh http://localhost:5678 mysecret123
 
-set -euo pipefail
+N8N_URL="${1:?Usage: bash tests/test-webhook.sh <n8n-url> <webhook-secret>}"
+SECRET="${2:?Usage: bash tests/test-webhook.sh <n8n-url> <webhook-secret>}"
+WEBHOOK_URL="${N8N_URL}/webhook-test/speed-to-lead"
 
-N8N_URL="${N8N_URL:-http://localhost:5678}"
-GOOGLE_KEY="${GOOGLE_KEY:-REPLACE_WITH_YOUR_GOOGLE_KEY}"
-SCENARIO="${1:-all}"
-SLUG="${2:-dupont-plomberie}"
+echo "=== Speed to Lead — Test ==="
+echo "URL: ${WEBHOOK_URL}"
+echo ""
 
-WEBHOOK_URL="${N8N_URL}/webhook-test/${SLUG}"
-PAYLOADS_DIR="$(dirname "$0")/payloads"
+echo "--- Test 1: Lead complet (nom + tel + email + message) ---"
+curl -s -w "\nHTTP %{http_code}\n" \
+  -X POST "${WEBHOOK_URL}" \
+  -H "Content-Type: application/json" \
+  -H "X-Webhook-Secret: ${SECRET}" \
+  -d @tests/payloads/wordpress-lead.json
+echo ""
 
-send_payload() {
-  local name="$1"
-  local file="$2"
-  local payload
-  payload=$(sed "s/REPLACE_WITH_YOUR_GOOGLE_KEY/${GOOGLE_KEY}/g" "$file")
-  echo "--- Sending: $name ---"
-  echo "URL: $WEBHOOK_URL"
-  HTTP_STATUS=$(echo "$payload" | curl -s -o /dev/null -w "%{http_code}" \
-    -X POST "$WEBHOOK_URL" \
-    -H "Content-Type: application/json" \
-    -d @-)
-  echo "HTTP Status: $HTTP_STATUS"
-  if [ "$HTTP_STATUS" = "200" ]; then
-    echo "PASS: $name returned 200"
-  else
-    echo "FAIL: $name returned $HTTP_STATUS (expected 200)"
-  fi
-  echo ""
-  sleep 2
-}
+echo "--- Test 2: Lead email uniquement (pas de telephone) ---"
+curl -s -w "\nHTTP %{http_code}\n" \
+  -X POST "${WEBHOOK_URL}" \
+  -H "Content-Type: application/json" \
+  -H "X-Webhook-Secret: ${SECRET}" \
+  -d @tests/payloads/wordpress-lead-email-only.json
+echo ""
 
-case "$SCENARIO" in
-  happy)
-    send_payload "Happy Path" "${PAYLOADS_DIR}/google-ads-lead.json"
-    ;;
-  duplicate)
-    send_payload "Happy Path (first send)" "${PAYLOADS_DIR}/google-ads-lead.json"
-    send_payload "Duplicate (same lead_id)" "${PAYLOADS_DIR}/google-ads-lead-duplicate.json"
-    ;;
-  invalid-key)
-    send_payload "Invalid google_key" "${PAYLOADS_DIR}/google-ads-lead-invalid-key.json"
-    ;;
-  email-only)
-    send_payload "Email Only (no phone)" "${PAYLOADS_DIR}/google-ads-lead-email-only.json"
-    ;;
-  all)
-    send_payload "Happy Path" "${PAYLOADS_DIR}/google-ads-lead.json"
-    send_payload "Duplicate lead_id" "${PAYLOADS_DIR}/google-ads-lead-duplicate.json"
-    send_payload "Invalid google_key" "${PAYLOADS_DIR}/google-ads-lead-invalid-key.json"
-    send_payload "Email Only" "${PAYLOADS_DIR}/google-ads-lead-email-only.json"
-    ;;
-  *)
-    echo "Unknown scenario: $SCENARIO"
-    echo "Usage: $0 [happy|duplicate|invalid-key|email-only|all]"
-    exit 1
-    ;;
-esac
+echo "--- Test 3: Lead sans secret (doit etre rejete) ---"
+curl -s -w "\nHTTP %{http_code}\n" \
+  -X POST "${WEBHOOK_URL}" \
+  -H "Content-Type: application/json" \
+  -d @tests/payloads/wordpress-lead.json
+echo ""
 
-echo "Done. Check n8n execution log at: ${N8N_URL}/executions"
+echo "--- Test 4: Deduplication (meme lead envoye 2x) ---"
+curl -s -w "\nHTTP %{http_code}\n" \
+  -X POST "${WEBHOOK_URL}" \
+  -H "Content-Type: application/json" \
+  -H "X-Webhook-Secret: ${SECRET}" \
+  -d @tests/payloads/wordpress-lead.json
+echo "(Le prospect ne doit PAS recevoir un 2e SMS)"
+echo ""
+
+echo "=== Tests termines ==="

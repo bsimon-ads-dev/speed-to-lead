@@ -31,7 +31,7 @@
 
 - [x] **CONF-01**: Chaque client a sa propre configuration (nom entreprise, canaux, délais, type de service)
 - [x] **CONF-02**: Un seul Core Workflow n8n partagé entre tous les clients (multi-tenant)
-- [ ] **CONF-03**: Chaque client a une URL webhook unique par slug (`/webhook/dupont-plomberie`)
+- [x] **CONF-03**: Chaque client a une URL webhook unique par slug (`/webhook/dupont-plomberie`)
 
 ## v2 Requirements
 
@@ -79,7 +79,7 @@
 | NOTIF-04 | Phase 1 | Complete |
 | CONF-01 | Phase 2 | Complete |
 | CONF-02 | Phase 2 | Complete |
-| CONF-03 | Phase 2 | Pending |
+| CONF-03 | Phase 2 | Complete |
 
 **Coverage:**
 - v1 requirements: 16 total

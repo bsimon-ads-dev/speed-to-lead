@@ -52,7 +52,7 @@ Plans:
 Plans:
 - [x] 02-01-PLAN.md — Per-client config schema: extend dupont-plomberie.json + create cabinet-martin.json with follow-up fields and CLIENTSLUG_ env var registry
 - [x] 02-02-PLAN.md — Core Workflow: transform main workflow into shared parameterized Core + add follow-up scheduler (Wait + Business Hours + Follow-up SMS)
-- [ ] 02-03-PLAN.md — Entry workflows: thin per-client entry workflows for dupont-plomberie and cabinet-martin with google_key gate + config assembler + fire-and-forget Core call
+- [x] 02-03-PLAN.md — Entry workflows: thin per-client entry workflows for dupont-plomberie and cabinet-martin with google_key gate + config assembler + fire-and-forget Core call
 - [ ] 02-04-PLAN.md — Tests + docs: update test-webhook.sh with slug parameter + Phase 2 testing guide in TESTING.md
 
 ### Phase 3: WhatsApp + Hardening

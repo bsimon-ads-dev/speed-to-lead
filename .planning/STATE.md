@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-follow-up-multi-tenant 02-02-PLAN.md — Core Workflow parameterized with executeWorkflowTrigger and follow-up chain
-last_updated: "2026-03-28T14:56:00.415Z"
+stopped_at: Completed 02-follow-up-multi-tenant 02-03-PLAN.md — Entry workflows for Dupont Plomberie and Cabinet Martin
+last_updated: "2026-03-28T14:59:31.429Z"
 last_activity: 2026-03-28
 progress:
   total_phases: 3
   completed_phases: 1
   total_plans: 10
-  completed_plans: 8
+  completed_plans: 9
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 ## Current Position
 
 Phase: 02 (follow-up-multi-tenant) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-03-28
 
@@ -60,6 +60,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-critical-path P06 | 3 | 1 tasks | 1 files |
 | Phase 02-follow-up-multi-tenant P01 | 2 | 2 tasks | 2 files |
 | Phase 02-follow-up-multi-tenant P02 | 2 | 1 tasks | 1 files |
+| Phase 02-follow-up-multi-tenant P03 | 2 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -92,6 +93,9 @@ Recent decisions affecting current work:
 - [Phase 02-follow-up-multi-tenant]: 02-02: google_key validation removed from Core Workflow — moved to entry workflows (Plan 03) so Core Workflow is auth-agnostic
 - [Phase 02-follow-up-multi-tenant]: 02-02: client_config forwarded explicitly in Code nodes that rebuild $json — prevents client_config loss through field-reconstructing nodes
 - [Phase 02-follow-up-multi-tenant]: 02-02: Wait node placed immediately after owner SMS — follow-up delay starts from owner notification moment
+- [Phase 02-follow-up-multi-tenant]: google_key validated in entry workflow IF node — Core Workflow is auth-agnostic, trusts authenticated entry payloads
+- [Phase 02-follow-up-multi-tenant]: CORE_WORKFLOW_ID kept as placeholder — post-import manual step to select Core Workflow by name in n8n UI
+- [Phase 02-follow-up-multi-tenant]: waitForSubWorkflow:false is architectural invariant in entry workflows — Core Workflow Wait node makes blocking execution cause Google Ads timeout and lead loss
 
 ### Pending Todos
 
@@ -104,6 +108,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T14:56:00.411Z
-Stopped at: Completed 02-follow-up-multi-tenant 02-02-PLAN.md — Core Workflow parameterized with executeWorkflowTrigger and follow-up chain
+Last session: 2026-03-28T14:59:31.426Z
+Stopped at: Completed 02-follow-up-multi-tenant 02-03-PLAN.md — Entry workflows for Dupont Plomberie and Cabinet Martin
 Resume file: None

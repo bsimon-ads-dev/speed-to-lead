@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 02-follow-up-multi-tenant 02-03-PLAN.md — Entry workflows for Dupont Plomberie and Cabinet Martin
-last_updated: "2026-03-28T14:59:31.429Z"
+status: verifying
+stopped_at: Completed 02-follow-up-multi-tenant 02-04-PLAN.md — Test script and TESTING.md Phase 2 procedures
+last_updated: "2026-03-28T15:02:53.282Z"
 last_activity: 2026-03-28
 progress:
   total_phases: 3
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 10
-  completed_plans: 9
+  completed_plans: 10
   percent: 0
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 
 Phase: 02 (follow-up-multi-tenant) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-03-28
 
 Progress: [░░░░░░░░░░] 0%
@@ -61,6 +61,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 02-follow-up-multi-tenant P01 | 2 | 2 tasks | 2 files |
 | Phase 02-follow-up-multi-tenant P02 | 2 | 1 tasks | 1 files |
 | Phase 02-follow-up-multi-tenant P03 | 2 | 2 tasks | 2 files |
+| Phase 02-follow-up-multi-tenant P04 | 5 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,8 @@ Recent decisions affecting current work:
 - [Phase 02-follow-up-multi-tenant]: google_key validated in entry workflow IF node — Core Workflow is auth-agnostic, trusts authenticated entry payloads
 - [Phase 02-follow-up-multi-tenant]: CORE_WORKFLOW_ID kept as placeholder — post-import manual step to select Core Workflow by name in n8n UI
 - [Phase 02-follow-up-multi-tenant]: waitForSubWorkflow:false is architectural invariant in entry workflows — Core Workflow Wait node makes blocking execution cause Google Ads timeout and lead loss
+- [Phase 02-follow-up-multi-tenant]: 02-04: Positional argument for slug (not env var) — consistent with existing SCENARIO positional arg, simpler multi-client CLI UX
+- [Phase 02-follow-up-multi-tenant]: 02-04: RESTORE reminder embedded in follow-up delay test — prevents accidental 45-minute production waits during testing
 
 ### Pending Todos
 
@@ -108,6 +111,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T14:59:31.426Z
-Stopped at: Completed 02-follow-up-multi-tenant 02-03-PLAN.md — Entry workflows for Dupont Plomberie and Cabinet Martin
+Last session: 2026-03-28T15:02:53.279Z
+Stopped at: Completed 02-follow-up-multi-tenant 02-04-PLAN.md — Test script and TESTING.md Phase 2 procedures
 Resume file: None

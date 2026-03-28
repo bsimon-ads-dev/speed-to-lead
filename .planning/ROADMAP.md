@@ -13,7 +13,7 @@ Three phases that build outward from the critical path. Phase 1 establishes the 
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Critical Path** - Webhook to prospect SMS + owner notification, end-to-end, one client (completed 2026-03-28)
-- [ ] **Phase 2: Follow-up + Multi-tenant** - Configurable follow-up scheduler and shared Core Workflow for N clients
+- [x] **Phase 2: Follow-up + Multi-tenant** - Configurable follow-up scheduler and shared Core Workflow for N clients (completed 2026-03-28)
 - [ ] **Phase 3: WhatsApp + Hardening** - WhatsApp channel for both branches and production reliability ops
 
 ## Phase Details
@@ -53,7 +53,7 @@ Plans:
 - [x] 02-01-PLAN.md — Per-client config schema: extend dupont-plomberie.json + create cabinet-martin.json with follow-up fields and CLIENTSLUG_ env var registry
 - [x] 02-02-PLAN.md — Core Workflow: transform main workflow into shared parameterized Core + add follow-up scheduler (Wait + Business Hours + Follow-up SMS)
 - [x] 02-03-PLAN.md — Entry workflows: thin per-client entry workflows for dupont-plomberie and cabinet-martin with google_key gate + config assembler + fire-and-forget Core call
-- [ ] 02-04-PLAN.md — Tests + docs: update test-webhook.sh with slug parameter + Phase 2 testing guide in TESTING.md
+- [x] 02-04-PLAN.md — Tests + docs: update test-webhook.sh with slug parameter + Phase 2 testing guide in TESTING.md
 
 ### Phase 3: WhatsApp + Hardening
 **Goal**: WhatsApp is available as a channel for both prospect messages and owner notifications, and the system is hardened for a growing client base with spend caps, uptime monitoring, and circuit breakers
@@ -75,5 +75,5 @@ Phases execute in numeric order: 1 → 2 → 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Critical Path | 6/6 | Complete   | 2026-03-28 |
-| 2. Follow-up + Multi-tenant | 1/4 | In Progress|  |
+| 2. Follow-up + Multi-tenant | 4/4 | Complete   | 2026-03-28 |
 | 3. WhatsApp + Hardening | 0/TBD | Not started | - |

@@ -28,7 +28,15 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. The owner receives an SMS with the prospect's name, need, and phone number plus a one-tap `tel:` link to call back immediately
   4. Submitting the same `lead_id` twice results in exactly one message sent (deduplication works)
   5. If the Claude or Twilio call fails, Baptiste receives the raw lead data by SMS so no lead is silently dropped
-**Plans**: TBD
+**Plans**: 6 plans
+
+Plans:
+- [x] 01-01-PLAN.md — Test fixture library: 4 JSON payloads + shell test runner + testing guide
+- [ ] 01-02-PLAN.md — Project scaffold: client config JSON, n8n workflow skeletons, Claude prompt template
+- [ ] 01-03-PLAN.md — Ingestion layer: webhook (200 immediately) + raw log + google_key validation + dedup + field extraction
+- [ ] 01-04-PLAN.md — Error handler workflow: Error Trigger + fallback SMS to Baptiste via Twilio
+- [ ] 01-05-PLAN.md — AI + channel dispatch: Claude API call + SMS truncation + Twilio prospect SMS + Brevo email
+- [ ] 01-06-PLAN.md — Owner notification + wiring: owner SMS with tel: link + error workflow link + end-to-end verification
 
 ### Phase 2: Follow-up + Multi-tenant
 **Goal**: The system automatically follows up with prospects the owner hasn't called back, and the same Core Workflow serves multiple clients without credential cross-contamination
@@ -60,6 +68,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Critical Path | 0/TBD | Not started | - |
+| 1. Critical Path | 0/6 | Not started | - |
 | 2. Follow-up + Multi-tenant | 0/TBD | Not started | - |
 | 3. WhatsApp + Hardening | 0/TBD | Not started | - |

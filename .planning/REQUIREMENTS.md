@@ -7,10 +7,10 @@
 
 ### Ingestion
 
-- [ ] **INGEST-01**: Le système reçoit les leads Google Ads Lead Forms via webhook HTTP POST
-- [ ] **INGEST-02**: Le système déduplique les leads par `lead_id` pour éviter les messages en double
-- [ ] **INGEST-03**: Le système log le payload brut de chaque lead reçu pour audit/debug
-- [ ] **INGEST-04**: Le système valide l'authenticité du webhook via `google_key`
+- [x] **INGEST-01**: Le système reçoit les leads Google Ads Lead Forms via webhook HTTP POST
+- [x] **INGEST-02**: Le système déduplique les leads par `lead_id` pour éviter les messages en double
+- [x] **INGEST-03**: Le système log le payload brut de chaque lead reçu pour audit/debug
+- [x] **INGEST-04**: Le système valide l'authenticité du webhook via `google_key`
 
 ### Réponse Prospect
 
@@ -64,10 +64,10 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INGEST-01 | Phase 1 | Pending |
-| INGEST-02 | Phase 1 | Pending |
-| INGEST-03 | Phase 1 | Pending |
-| INGEST-04 | Phase 1 | Pending |
+| INGEST-01 | Phase 1 | Complete |
+| INGEST-02 | Phase 1 | Complete |
+| INGEST-03 | Phase 1 | Complete |
+| INGEST-04 | Phase 1 | Complete |
 | RESP-01 | Phase 1 | Pending |
 | RESP-02 | Phase 1 | Pending |
 | RESP-03 | Phase 1 | Pending |

@@ -86,6 +86,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [1340, 300],
+      "onError": "continueErrorOutput",
       "parameters": {
         "method": "POST",
         "url": "https://api.anthropic.com/v1/messages",
@@ -158,6 +159,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [2000, 200],
+      "onError": "continueErrorOutput",
       "parameters": {
         "method": "POST",
         "url": "=https://graph.facebook.com/v22.0/{{ $env.WA_PHONE_NUMBER_ID }}/messages",
@@ -222,6 +224,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [2440, 300],
+      "onError": "continueErrorOutput",
       "parameters": {
         "method": "POST",
         "url": "=https://graph.facebook.com/v22.0/{{ $env.WA_PHONE_NUMBER_ID }}/messages",
@@ -296,6 +299,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [3320, 200],
+      "onError": "continueErrorOutput",
       "parameters": {
         "method": "POST",
         "url": "=https://graph.facebook.com/v22.0/{{ $env.WA_PHONE_NUMBER_ID }}/messages",
@@ -315,14 +319,6 @@
         "body": "={\n  \"messaging_product\": \"whatsapp\",\n  \"recipient_type\": \"individual\",\n  \"to\": \"{{ $json.phone }}\",\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": \"lead_followup_fr\",\n    \"language\": { \"code\": \"fr\" },\n    \"components\": [{\n      \"type\": \"body\",\n      \"parameters\": [\n        { \"type\": \"text\", \"text\": \"{{ $json.name.split(' ')[0] }}\" },\n        { \"type\": \"text\", \"text\": \"{{ $env.BUSINESS_NAME }}\" }\n      ]\n    }]\n  }\n}",
         "options": {}
       }
-    },
-    {
-      "id": "node-error-trigger",
-      "name": "Error Trigger",
-      "type": "n8n-nodes-base.errorTrigger",
-      "typeVersion": 1,
-      "position": [240, 600],
-      "parameters": {}
     },
     {
       "id": "node-error-format",
@@ -384,7 +380,10 @@
       "main": [[{ "node": "HTTP Request: Claude API", "type": "main", "index": 0 }]]
     },
     "HTTP Request: Claude API": {
-      "main": [[{ "node": "Code: Truncate SMS", "type": "main", "index": 0 }]]
+      "main": [
+        [{ "node": "Code: Truncate SMS", "type": "main", "index": 0 }],
+        [{ "node": "Code: Format Fallback SMS", "type": "main", "index": 0 }]
+      ]
     },
     "Code: Truncate SMS": {
       "main": [[{ "node": "IF: Phone Available?", "type": "main", "index": 0 }]]
@@ -396,7 +395,10 @@
       ]
     },
     "WhatsApp: Message Prospect": {
-      "main": [[{ "node": "Code: Format Owner SMS", "type": "main", "index": 0 }]]
+      "main": [
+        [{ "node": "Code: Format Owner SMS", "type": "main", "index": 0 }],
+        [{ "node": "Code: Format Fallback SMS", "type": "main", "index": 0 }]
+      ]
     },
     "Brevo: Email Prospect": {
       "main": [[{ "node": "Code: Format Owner SMS", "type": "main", "index": 0 }]]
@@ -405,7 +407,10 @@
       "main": [[{ "node": "WhatsApp: Message Dirigeant", "type": "main", "index": 0 }]]
     },
     "WhatsApp: Message Dirigeant": {
-      "main": [[{ "node": "Wait: Follow-up Delay", "type": "main", "index": 0 }]]
+      "main": [
+        [{ "node": "Wait: Follow-up Delay", "type": "main", "index": 0 }],
+        [{ "node": "Code: Format Fallback SMS", "type": "main", "index": 0 }]
+      ]
     },
     "Wait: Follow-up Delay": {
       "main": [[{ "node": "Code: Business Hours Check", "type": "main", "index": 0 }]]
@@ -419,8 +424,11 @@
         []
       ]
     },
-    "Error Trigger": {
-      "main": [[{ "node": "Code: Format Fallback SMS", "type": "main", "index": 0 }]]
+    "WhatsApp: Message Relance": {
+      "main": [
+        [],
+        [{ "node": "Code: Format Fallback SMS", "type": "main", "index": 0 }]
+      ]
     },
     "Code: Format Fallback SMS": {
       "main": [[{ "node": "WhatsApp: Fallback Dirigeant", "type": "main", "index": 0 }]]

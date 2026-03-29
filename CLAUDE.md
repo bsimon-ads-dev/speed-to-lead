@@ -170,3 +170,9 @@ Do not make direct repo edits outside a GSD workflow unless the user explicitly 
 > Profile not yet configured. Run `/gsd:profile-user` to generate your developer profile.
 > This section is managed by `generate-claude-profile` -- do not edit manually.
 <!-- GSD:profile-end -->
+
+## Stack v2 (2026-03-29)
+- Canal principal : WhatsApp Cloud API (Meta) — remplace Twilio SMS
+- Email fallback : Brevo Free (inchangé)
+- Error handler : notifie le dirigeant (owner_phone), pas Baptiste
+- Spec : docs/superpowers/specs/2026-03-29-whatsapp-migration-design.md

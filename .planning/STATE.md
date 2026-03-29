@@ -110,6 +110,12 @@ Recent decisions affecting current work:
 - [Phase 03-whatsapp-hardening]: 03-02: ContentVariables as JSON string literal (not JSON.stringify) — avoids n8n expression engine double-encoding
 - [Phase 03-whatsapp-hardening]: 03-02: No Body parameter on WhatsApp HTTP Request nodes — prevents WABA flagging and silent delivery failure
 
+### Migration v2 — Twilio → WhatsApp Cloud API (2026-03-29)
+- Remplacé Twilio SMS/WhatsApp par WhatsApp Cloud API (Meta Graph API)
+- Error handler redirigé vers owner_phone (plus BAPTISTE_PHONE)
+- 4 templates WhatsApp à soumettre à Meta pour approbation
+- Brevo Free conservé pour email fallback
+
 ### Pending Todos
 
 None yet.

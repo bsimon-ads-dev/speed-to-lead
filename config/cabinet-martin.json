@@ -1,5 +1,4 @@
 {
-  "_comment": "Per-client configuration for Speed to Lead. Sensitive values (Twilio SID/token, google_key) must be stored as n8n environment variables. This file stores only non-sensitive values and the registry of required env var names.",
   "client_slug": "cabinet-martin",
   "business_name": "Cabinet Martin Avocats",
   "service_type": "avocat",
@@ -10,23 +9,21 @@
   "callback_promise_minutes": 60,
   "follow_up_delay_minutes": 120,
   "follow_up_enabled": true,
-  "whatsapp_enabled": false,
-  "owner_whatsapp_enabled": false,
-  "whatsapp_sender": "",
-  "whatsapp_template_sid": "",
-  "whatsapp_owner_template_sid": "",
   "active": true,
-  "env_vars_required": {
-    "MARTIN_GOOGLE_KEY": "Shared secret from Google Ads Lead Form settings for Cabinet Martin",
-    "MARTIN_TWILIO_ACCOUNT_SID": "Twilio Account SID for Cabinet Martin (from Twilio Console)",
-    "MARTIN_TWILIO_AUTH_TOKEN": "Twilio Auth Token for Cabinet Martin (from Twilio Console)",
-    "MARTIN_TWILIO_SENDER_ID": "Alphanumeric sender ID for Cabinet Martin — max 11 chars, e.g. CabMartin",
-    "ANTHROPIC_API_KEY": "Shared — from console.anthropic.com > API Keys",
-    "BREVO_API_KEY": "Shared — from app.brevo.com > Settings > API Keys",
-    "BAPTISTE_PHONE": "Baptiste's mobile in E.164 format — receives error fallback SMS",
-    "MARTIN_WHATSAPP_SENDER": "E.164 phone number registered as WhatsApp sender in Twilio WABA — e.g. +33600000002 (NOT alphanumeric)",
-    "MARTIN_WHATSAPP_TEMPLATE_SID": "ContentSid for prospect confirmation template — format HXabc...",
-    "MARTIN_WHATSAPP_OWNER_TEMPLATE_SID": "ContentSid for owner notification template — format HXdef..."
+  "wa_templates": {
+    "confirm": "lead_confirm_fr",
+    "owner_notify": "lead_owner_notify_fr",
+    "followup": "lead_followup_fr",
+    "error": "lead_error_notify_fr"
   },
-  "_rgpd_note": "Pre-launch requirement: Lead Form must include a pre-unchecked consent checkbox: 'J accepte d etre contacte(e) par SMS par Cabinet Martin Avocats concernant ma demande.' Consent must be collected before first production send."
+  "env_vars_required": {
+    "MARTIN_GOOGLE_KEY": "Shared secret from Google Ads Lead Form settings",
+    "MARTIN_WA_PHONE_NUMBER_ID": "WhatsApp phone number ID from Meta Business Manager",
+    "MARTIN_WA_ACCESS_TOKEN": "Permanent System User token from Meta Business Manager",
+    "MARTIN_OWNER_PHONE": "Owner mobile in E.164 format",
+    "MARTIN_WEBHOOK_SECRET": "Secret for WordPress webhook validation",
+    "ANTHROPIC_API_KEY": "Shared — from console.anthropic.com",
+    "BREVO_API_KEY": "Shared — from app.brevo.com"
+  },
+  "RGPD": "Pre-launch: Lead Form must include consent checkbox"
 }

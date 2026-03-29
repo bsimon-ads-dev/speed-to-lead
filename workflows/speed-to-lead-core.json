@@ -1,5 +1,5 @@
 {
-  "name": "Speed to Lead \u2014 Core",
+  "name": "Speed to Lead — Core",
   "nodes": [
     {
       "id": "node-circuit-breaker",
@@ -43,41 +43,48 @@
     },
     {
       "id": "node-cb-alert",
-      "name": "HTTP Request: Twilio SMS (CB Alert)",
+      "name": "WhatsApp: Alerte Circuit Breaker",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [680, 100],
       "parameters": {
         "method": "POST",
-        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $json.client_config.twilio_account_sid }}/Messages.json",
+        "url": "=https://graph.facebook.com/v22.0/{{ $json.client_config.wa_phone_number_id }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Basic {{ Buffer.from($json.client_config.twilio_account_sid + ':' + $json.client_config.twilio_auth_token).toString('base64') }}"
+              "value": "=Bearer {{ $json.client_config.wa_access_token }}"
             }
           ]
         },
         "sendBody": true,
-        "specifyBody": "keypair",
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "To",
-              "value": "={{ $env.BAPTISTE_PHONE }}"
-            },
-            {
-              "name": "From",
-              "value": "={{ $json.client_config.twilio_sender_id }}"
-            },
-            {
-              "name": "Body",
-              "value": "=ALERTE circuit breaker: lead_id {{ $json.lead_id }} a declenche {{ $json.cb_count }} executions en 10 min. Execution stoppee. Client: {{ $json.client_config.client_slug }}"
+        "contentType": "json",
+        "body": {
+          "json": {
+            "messaging_product": "whatsapp",
+            "recipient_type": "individual",
+            "to": "={{ $json.client_config.owner_phone }}",
+            "type": "template",
+            "template": {
+              "name": "={{ $json.client_config.wa_error_template }}",
+              "language": { "code": "fr" },
+              "components": [
+                {
+                  "type": "body",
+                  "parameters": [
+                    { "type": "text", "text": "Circuit breaker" },
+                    { "type": "text", "text": "=Trop de leads identiques détectés (lead_id: {{ $json.lead_id }})" },
+                    { "type": "text", "text": "Vérifiez votre formulaire" }
+                  ]
+                }
+              ]
             }
-          ]
-        },
-        "options": {}
+          }
+        }
       }
     },
     {
@@ -95,7 +102,7 @@
       "typeVersion": 2,
       "position": [460, 300],
       "parameters": {
-        "jsCode": "// INGEST-03: Log raw payload for audit/debug\n// NOTIF-04 prep: Store last lead in staticData for error recovery\nconst lead = $input.first().json;\n\n// Log to n8n execution log (visible in Executions view for 7 days)\nconsole.log('RAW_LEAD:', JSON.stringify(lead));\n\n// Store in workflow static data so Error Handler workflow can recover it\n// This survives even if subsequent nodes fail\nconst staticData = $getWorkflowStaticData('global');\nstaticData.lastLead = JSON.stringify(lead);\nstaticData.lastLeadTime = new Date().toISOString();\n\n// Pass through unchanged — do not modify the payload\nreturn $input.all();"
+        "jsCode": "const staticData = $getWorkflowStaticData('global');\nconst input = $input.first().json;\n\nstaticData.lastLead = {\n  ...input,\n  client_config: input.client_config,\n  logged_at: new Date().toISOString()\n};\n\nreturn { json: input };"
       }
     },
     {
@@ -197,115 +204,50 @@
       }
     },
     {
-      "id": "node-wa-if-prospect",
-      "name": "IF: whatsapp_enabled? (Prospect)",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [1780, 100],
-      "parameters": {
-        "conditions": {
-          "options": {
-            "leftValue": "",
-            "caseSensitive": true,
-            "typeValidation": "strict"
-          },
-          "combinator": "and",
-          "conditions": [
-            {
-              "id": "condition-wa-enabled-prospect",
-              "leftValue": "={{ $json.client_config.whatsapp_enabled }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "name": "filter.operator.true"
-              }
-            }
-          ]
-        },
-        "looseTypeValidation": false
-      }
-    },
-    {
       "id": "node-wa-prospect",
-      "name": "HTTP Request: Twilio WhatsApp (Prospect)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
-      "position": [2000, 60],
-      "parameters": {
-        "method": "POST",
-        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $json.client_config.twilio_account_sid }}/Messages.json",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Basic {{ Buffer.from($json.client_config.twilio_account_sid + ':' + $json.client_config.twilio_auth_token).toString('base64') }}"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "keypair",
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "To",
-              "value": "=whatsapp:{{ $json.phone }}"
-            },
-            {
-              "name": "From",
-              "value": "=whatsapp:{{ $json.client_config.whatsapp_sender }}"
-            },
-            {
-              "name": "ContentSid",
-              "value": "={{ $json.client_config.whatsapp_template_sid }}"
-            },
-            {
-              "name": "ContentVariables",
-              "value": "={\"1\":\"{{ $json.name }}\",\"2\":\"{{ $json.client_config.business_name }}\",\"3\":\"{{ $json.client_config.callback_promise_minutes }}\"}"
-            }
-          ]
-        },
-        "options": {}
-      }
-    },
-    {
-      "id": "node-twilio-prospect",
-      "name": "HTTP Request: Twilio SMS (Prospect)",
+      "name": "WhatsApp: Confirmation Prospect",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [1780, 220],
       "parameters": {
         "method": "POST",
-        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $json.client_config.twilio_account_sid }}/Messages.json",
+        "url": "=https://graph.facebook.com/v22.0/{{ $json.client_config.wa_phone_number_id }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Basic {{ Buffer.from($json.client_config.twilio_account_sid + ':' + $json.client_config.twilio_auth_token).toString('base64') }}"
+              "value": "=Bearer {{ $json.client_config.wa_access_token }}"
             }
           ]
         },
         "sendBody": true,
-        "specifyBody": "keypair",
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "To",
-              "value": "={{ $json.phone }}"
-            },
-            {
-              "name": "From",
-              "value": "={{ $json.client_config.twilio_sender_id }}"
-            },
-            {
-              "name": "Body",
-              "value": "={{ $json.claude_message }}"
+        "contentType": "json",
+        "body": {
+          "json": {
+            "messaging_product": "whatsapp",
+            "recipient_type": "individual",
+            "to": "={{ $json.phone }}",
+            "type": "template",
+            "template": {
+              "name": "={{ $json.client_config.wa_confirm_template }}",
+              "language": { "code": "fr" },
+              "components": [
+                {
+                  "type": "body",
+                  "parameters": [
+                    { "type": "text", "text": "={{ $json.name.split(' ')[0] }}" },
+                    { "type": "text", "text": "={{ $json.claude_message }}" },
+                    { "type": "text", "text": "={{ String($json.client_config.callback_promise_minutes) }}" },
+                    { "type": "text", "text": "={{ $json.client_config.business_name }}" }
+                  ]
+                }
+              ]
             }
-          ]
-        },
-        "options": {}
+          }
+        }
       }
     },
     {
@@ -319,8 +261,8 @@
         "operation": "send",
         "fromEmail": "={{ $json.client_config.brevo_sender_email }}",
         "toEmail": "={{ $json.email }}",
-        "subject": "=Votre demande \u2014 {{ $json.client_config.business_name }}",
-        "htmlContent": "=<p>{{ $json.claude_message }}</p><br><p style=\"color:#666;font-size:12px;\">{{ $json.client_config.business_name }} \u2014 Vous pouvez r\u00e9pondre \u00e0 cet email ou appeler directement.</p>"
+        "subject": "=Votre demande — {{ $json.client_config.business_name }}",
+        "htmlContent": "=<p>{{ $json.claude_message }}</p><br><p style=\"color:#666;font-size:12px;\">{{ $json.client_config.business_name }} — Vous pouvez répondre à cet email ou appeler directement.</p>"
       }
     },
     {
@@ -330,119 +272,53 @@
       "typeVersion": 2,
       "position": [2000, 220],
       "parameters": {
-        "jsCode": "// NOTIF-01, NOTIF-02: Owner notification with tel: one-tap callback link\nconst name = $json.name || 'Prospect';\nconst request = $json.request || '';\nconst phone = $json.phone || null;\nconst email = $json.email || 'non fourni';\nconst claudeMsg = $json.claude_message || '';\n\n// Build owner SMS — keep under 320 chars (2 segments)\nlet ownerSms;\nif (phone) {\n  // Phone available: include one-tap tel: link\n  ownerSms = `Lead: ${name}\\n\"${request.substring(0, 60)}\"\\nAppeler: tel:${phone}`;\n} else {\n  // Email only: no tel: link possible\n  ownerSms = `Lead: ${name}\\n\"${request.substring(0, 60)}\"\\nEmail: ${email}\\n(Pas de t\u00e9l)`;\n}\n\n// Truncate to 320 chars max\nownerSms = ownerSms.substring(0, 320);\n\n// Carry all fields forward for potential future nodes\nreturn [{\n  json: {\n    lead_id: $json.lead_id,\n    name,\n    phone,\n    email,\n    request,\n    claude_message: claudeMsg,\n    owner_sms: ownerSms,\n    client_config: $json.client_config\n  }\n}];"
-      }
-    },
-    {
-      "id": "node-wa-if-owner",
-      "name": "IF: owner_whatsapp_enabled?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [2220, 100],
-      "parameters": {
-        "conditions": {
-          "options": {
-            "leftValue": "",
-            "caseSensitive": true,
-            "typeValidation": "strict"
-          },
-          "combinator": "and",
-          "conditions": [
-            {
-              "id": "condition-owner-wa-enabled",
-              "leftValue": "={{ $json.client_config.owner_whatsapp_enabled }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "name": "filter.operator.true"
-              }
-            }
-          ]
-        },
-        "looseTypeValidation": false
+        "jsCode": "// NOTIF-01, NOTIF-02: Owner notification with tel: one-tap callback link\nconst name = $json.name || 'Prospect';\nconst request = $json.request || '';\nconst phone = $json.phone || null;\nconst email = $json.email || 'non fourni';\nconst claudeMsg = $json.claude_message || '';\n\n// Build owner request summary for WhatsApp template\nlet ownerRequestSummary;\nif (phone) {\n  ownerRequestSummary = `\"${request.substring(0, 60)}\" — Appeler: ${phone}`;\n} else {\n  ownerRequestSummary = `\"${request.substring(0, 60)}\" — Email: ${email} (Pas de tél)`;\n}\n\n// Truncate to 320 chars max\nownerRequestSummary = ownerRequestSummary.substring(0, 320);\n\n// Carry all fields forward for potential future nodes\nreturn [{\n  json: {\n    lead_id: $json.lead_id,\n    name,\n    phone,\n    email,\n    request,\n    claude_message: claudeMsg,\n    owner_request_summary: ownerRequestSummary,\n    client_config: $json.client_config\n  }\n}];"
       }
     },
     {
       "id": "node-wa-owner",
-      "name": "HTTP Request: Twilio WhatsApp (Owner)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
-      "position": [2440, 60],
-      "parameters": {
-        "method": "POST",
-        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $json.client_config.twilio_account_sid }}/Messages.json",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Basic {{ Buffer.from($json.client_config.twilio_account_sid + ':' + $json.client_config.twilio_auth_token).toString('base64') }}"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "keypair",
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "To",
-              "value": "=whatsapp:{{ $json.client_config.owner_phone }}"
-            },
-            {
-              "name": "From",
-              "value": "=whatsapp:{{ $json.client_config.whatsapp_sender }}"
-            },
-            {
-              "name": "ContentSid",
-              "value": "={{ $json.client_config.whatsapp_owner_template_sid }}"
-            },
-            {
-              "name": "ContentVariables",
-              "value": "={\"1\":\"{{ $json.name }}\",\"2\":\"{{ $json.request }}\",\"3\":\"{{ $json.phone }}\"}"
-            }
-          ]
-        },
-        "options": {}
-      }
-    },
-    {
-      "id": "node-twilio-owner",
-      "name": "HTTP Request: Twilio SMS (Owner)",
+      "name": "WhatsApp: Notification Dirigeant",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [2220, 220],
       "parameters": {
         "method": "POST",
-        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $json.client_config.twilio_account_sid }}/Messages.json",
+        "url": "=https://graph.facebook.com/v22.0/{{ $json.client_config.wa_phone_number_id }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Basic {{ Buffer.from($json.client_config.twilio_account_sid + ':' + $json.client_config.twilio_auth_token).toString('base64') }}"
+              "value": "=Bearer {{ $json.client_config.wa_access_token }}"
             }
           ]
         },
         "sendBody": true,
-        "specifyBody": "keypair",
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "To",
-              "value": "={{ $json.client_config.owner_phone }}"
-            },
-            {
-              "name": "From",
-              "value": "={{ $json.client_config.twilio_sender_id }}"
-            },
-            {
-              "name": "Body",
-              "value": "={{ $json.owner_sms }}"
+        "contentType": "json",
+        "body": {
+          "json": {
+            "messaging_product": "whatsapp",
+            "recipient_type": "individual",
+            "to": "={{ $json.client_config.owner_phone }}",
+            "type": "template",
+            "template": {
+              "name": "={{ $json.client_config.wa_owner_template }}",
+              "language": { "code": "fr" },
+              "components": [
+                {
+                  "type": "body",
+                  "parameters": [
+                    { "type": "text", "text": "={{ $json.name }}" },
+                    { "type": "text", "text": "={{ $json.owner_request_summary }}" },
+                    { "type": "text", "text": "={{ $json.phone || $json.email }}" }
+                  ]
+                }
+              ]
             }
-          ]
-        },
-        "options": {}
+          }
+        }
       }
     },
     {
@@ -494,33 +370,48 @@
       }
     },
     {
-      "id": "node-twilio-followup",
-      "name": "HTTP Request: Twilio SMS (Follow-up)",
+      "id": "node-wa-followup",
+      "name": "WhatsApp: Relance Prospect",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [3100, 140],
       "parameters": {
         "method": "POST",
-        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $json.client_config.twilio_account_sid }}/Messages.json",
+        "url": "=https://graph.facebook.com/v22.0/{{ $json.client_config.wa_phone_number_id }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Basic {{ Buffer.from($json.client_config.twilio_account_sid + ':' + $json.client_config.twilio_auth_token).toString('base64') }}"
+              "value": "=Bearer {{ $json.client_config.wa_access_token }}"
             }
           ]
         },
         "sendBody": true,
-        "specifyBody": "keypair",
-        "bodyParameters": {
-          "parameters": [
-            { "name": "To", "value": "={{ $json.phone }}" },
-            { "name": "From", "value": "={{ $json.client_config.twilio_sender_id }}" },
-            { "name": "Body", "value": "=Toujours disponible pour votre demande ? {{ $json.client_config.business_name }} peut vous rappeler maintenant." }
-          ]
-        },
-        "options": {}
+        "contentType": "json",
+        "body": {
+          "json": {
+            "messaging_product": "whatsapp",
+            "recipient_type": "individual",
+            "to": "={{ $json.phone }}",
+            "type": "template",
+            "template": {
+              "name": "={{ $json.client_config.wa_followup_template }}",
+              "language": { "code": "fr" },
+              "components": [
+                {
+                  "type": "body",
+                  "parameters": [
+                    { "type": "text", "text": "={{ $json.name.split(' ')[0] }}" },
+                    { "type": "text", "text": "={{ $json.client_config.business_name }}" }
+                  ]
+                }
+              ]
+            }
+          }
+        }
       }
     },
     {
@@ -543,7 +434,7 @@
     },
     "IF: Circuit Breaker Tripped?": {
       "main": [
-        [{ "node": "HTTP Request: Twilio SMS (CB Alert)", "type": "main", "index": 0 }],
+        [{ "node": "WhatsApp: Alerte Circuit Breaker", "type": "main", "index": 0 }],
         [{ "node": "Code: Log Raw Payload", "type": "main", "index": 0 }]
       ]
     },
@@ -567,38 +458,20 @@
     },
     "IF: phone available?": {
       "main": [
-        [{ "node": "IF: whatsapp_enabled? (Prospect)", "type": "main", "index": 0 }],
+        [{ "node": "WhatsApp: Confirmation Prospect", "type": "main", "index": 0 }],
         [{ "node": "Brevo: Send Email (Prospect)", "type": "main", "index": 0 }]
       ]
     },
-    "IF: whatsapp_enabled? (Prospect)": {
-      "main": [
-        [{ "node": "HTTP Request: Twilio WhatsApp (Prospect)", "type": "main", "index": 0 }],
-        [{ "node": "HTTP Request: Twilio SMS (Prospect)", "type": "main", "index": 0 }]
-      ]
-    },
-    "HTTP Request: Twilio WhatsApp (Prospect)": {
-      "main": [[{ "node": "Code: Format Owner Notification", "type": "main", "index": 0 }]]
-    },
-    "HTTP Request: Twilio SMS (Prospect)": {
+    "WhatsApp: Confirmation Prospect": {
       "main": [[{ "node": "Code: Format Owner Notification", "type": "main", "index": 0 }]]
     },
     "Brevo: Send Email (Prospect)": {
       "main": [[{ "node": "Code: Format Owner Notification", "type": "main", "index": 0 }]]
     },
     "Code: Format Owner Notification": {
-      "main": [[{ "node": "IF: owner_whatsapp_enabled?", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "WhatsApp: Notification Dirigeant", "type": "main", "index": 0 }]]
     },
-    "IF: owner_whatsapp_enabled?": {
-      "main": [
-        [{ "node": "HTTP Request: Twilio WhatsApp (Owner)", "type": "main", "index": 0 }],
-        [{ "node": "HTTP Request: Twilio SMS (Owner)", "type": "main", "index": 0 }]
-      ]
-    },
-    "HTTP Request: Twilio WhatsApp (Owner)": {
-      "main": [[{ "node": "Wait: Follow-up Delay", "type": "main", "index": 0 }]]
-    },
-    "HTTP Request: Twilio SMS (Owner)": {
+    "WhatsApp: Notification Dirigeant": {
       "main": [[{ "node": "Wait: Follow-up Delay", "type": "main", "index": 0 }]]
     },
     "Wait: Follow-up Delay": {
@@ -609,14 +482,14 @@
     },
     "IF: Business Hours OK?": {
       "main": [
-        [{ "node": "HTTP Request: Twilio SMS (Follow-up)", "type": "main", "index": 0 }],
+        [{ "node": "WhatsApp: Relance Prospect", "type": "main", "index": 0 }],
         [{ "node": "Code: Log Follow-up Skipped", "type": "main", "index": 0 }]
       ]
     }
   },
   "settings": {
     "executionOrder": "v1",
-    "errorWorkflow": "Speed to Lead \u2014 Error Handler",
+    "errorWorkflow": "Speed to Lead — Error Handler",
     "saveManualExecutions": true
   }
 }

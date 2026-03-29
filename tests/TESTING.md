@@ -151,7 +151,7 @@ Run these checks before marking Phase 2 complete:
 | CONF-01 — Per-client config | Send lead to each client, inspect Code: Assemble Client Config output | Each execution shows correct client_slug, business_name, owner_phone |
 | CONF-02 — Shared Core Workflow | Both client executions appear under "Speed to Lead — Core" in Executions | Same workflow ID for both clients |
 | CONF-03 — Unique webhook slugs | curl to /webhook/dupont-plomberie and /webhook/cabinet-martin both return 200 | Distinct URLs, both active |
-| NOTIF-03 — Follow-up fires | 1-minute test (see above), follow-up SMS received on test phone | SMS received within 90 seconds of delay expiry |
+| NOTIF-03 — Follow-up fires | 1-minute test (see above), follow-up WhatsApp received on test phone | WhatsApp received within 90 seconds of delay expiry |
 | NOTIF-03 — Follow-up gated | Business hours check node output business_hours_ok matches current time | Correctly blocks outside Mon-Sat 08:00-20:00 Paris |
 
 ### Webhook URLs for Phase 2
@@ -191,15 +191,15 @@ Run these checks before marking Phase 2 complete:
 
 **What it tests:** Prospect receives WhatsApp message via approved template when whatsapp_enabled is true.
 
-**Prerequisite:** WABA onboarding complete for the test client (DUPONT_WHATSAPP_SENDER env var set, DUPONT_WHATSAPP_TEMPLATE_SID set to approved ContentSid). Entry workflow has whatsapp_enabled: true set in Code: Assemble Client Config.
+**Prerequisite:** WABA onboarding complete for the test client (WA_PHONE_NUMBER_ID env var set, WA_TEMPLATE_NAME set to approved template). Entry workflow has whatsapp_enabled: true set in Code: Assemble Client Config.
 
 **Steps:**
 1. Temporarily set whatsapp_enabled: true in entry workflow jsCode for dupont-plomberie
 2. Send a test lead: GOOGLE_KEY=your_key ./tests/test-webhook.sh happy dupont-plomberie
-3. Check Twilio Console > Monitor > Messaging Logs — the outbound WhatsApp message should show status "delivered" with a message SID starting with MM
+3. Check Meta Business Manager > WhatsApp > Insights — the outbound WhatsApp message should show status "delivered"
 4. Check the prospect's WhatsApp — should receive the template message: "Bonjour [name], votre demande a bien ete recue. Dupont Plomberie vous rappelle sous 30 minutes."
 
-**IMPORTANT:** Never add a Body parameter to the WhatsApp HTTP Request node. If the message arrives as free-form text (not a template), the node is misconfigured. Check Twilio Console for delivery receipts — absence of delivery receipt with an MM SID means silent delivery failure (likely Body used instead of ContentSid).
+**IMPORTANT:** Verify the message uses the approved template. If the message arrives as free-form text (not a template), the node is misconfigured. Check Meta Business Manager for delivery status — absence of delivery confirmation means silent delivery failure.
 
 **Restore:** Set whatsapp_enabled back to false after testing unless activating for production.
 
@@ -207,15 +207,15 @@ Run these checks before marking Phase 2 complete:
 
 ### Test 3-C: WhatsApp Owner Notification (SC-2)
 
-**What it tests:** Owner receives WhatsApp notification when owner_whatsapp_enabled is true.
+**What it tests:** Dirigeant receives WhatsApp notification when owner_whatsapp_enabled is true.
 
-**Prerequisite:** WABA onboarding complete. DUPONT_WHATSAPP_OWNER_TEMPLATE_SID env var set to approved ContentSid. Entry workflow has owner_whatsapp_enabled: true.
+**Prerequisite:** WABA onboarding complete. WA_TEMPLATE_NAME env var set to approved owner template. Entry workflow has owner_whatsapp_enabled: true.
 
 **Steps:**
 1. Temporarily set owner_whatsapp_enabled: true in entry workflow jsCode
 2. Send a test lead: GOOGLE_KEY=your_key ./tests/test-webhook.sh happy dupont-plomberie
-3. Check Twilio Console — outbound WhatsApp to owner_phone should appear with "delivered" status
-4. Check owner's WhatsApp — should receive: "Nouveau lead: [name] — Demande: [request] — Tel: [phone]"
+3. Check Meta Business Manager > WhatsApp > Insights — outbound WhatsApp to dirigeant phone should appear with "delivered" status
+4. Check dirigeant's WhatsApp — should receive: "Nouveau lead: [name] — Demande: [request] — Tel: [phone]"
 
 **Restore:** Set owner_whatsapp_enabled back to false after testing.
 

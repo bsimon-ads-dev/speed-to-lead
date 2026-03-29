@@ -153,37 +153,30 @@
       }
     },
     {
-      "id": "node-twilio-prospect",
-      "name": "Twilio: SMS Prospect",
+      "id": "node-wa-prospect",
+      "name": "WhatsApp: Message Prospect",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [2000, 200],
       "parameters": {
         "method": "POST",
-        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $env.TWILIO_ACCOUNT_SID }}/Messages.json",
+        "url": "=https://graph.facebook.com/v22.0/{{ $env.WA_PHONE_NUMBER_ID }}/messages",
         "authentication": "genericCredentialType",
-        "genericAuthType": "httpBasicAuth",
-        "sendBody": true,
-        "specifyBody": "keypair",
-        "bodyParameters": {
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
           "parameters": [
             {
-              "name": "To",
-              "value": "={{ $json.phone }}"
-            },
-            {
-              "name": "From",
-              "value": "={{ $env.TWILIO_SENDER_ID }}"
-            },
-            {
-              "name": "Body",
-              "value": "={{ $json.sms }}"
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WA_ACCESS_TOKEN }}"
             }
           ]
         },
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"messaging_product\": \"whatsapp\",\n  \"recipient_type\": \"individual\",\n  \"to\": \"{{ $json.phone }}\",\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": \"lead_confirm_fr\",\n    \"language\": { \"code\": \"fr\" },\n    \"components\": [{\n      \"type\": \"body\",\n      \"parameters\": [\n        { \"type\": \"text\", \"text\": \"{{ $json.name.split(' ')[0] }}\" },\n        { \"type\": \"text\", \"text\": \"{{ $json.sms }}\" },\n        { \"type\": \"text\", \"text\": \"{{ $env.CALLBACK_MINUTES || '30' }}\" },\n        { \"type\": \"text\", \"text\": \"{{ $env.BUSINESS_NAME }}\" }\n      ]\n    }]\n  }\n}",
         "options": {}
-      },
-      "_setup_notes": "Apres import: creer un credential 'HTTP Basic Auth' dans n8n avec Username = TWILIO_ACCOUNT_SID et Password = TWILIO_AUTH_TOKEN, puis le selectionner dans ce noeud."
+      }
     },
     {
       "id": "node-brevo-email",
@@ -220,38 +213,32 @@
       "typeVersion": 2,
       "position": [2220, 300],
       "parameters": {
-        "jsCode": "// Notification dirigeant avec lien tel: pour rappel en 1 clic\nconst name = $json.name || 'Prospect';\nconst message = $json.message || '';\nconst phone = $json.phone || null;\nconst email = $json.email || 'non fourni';\n\nlet ownerSms;\nif (phone) {\n  ownerSms = `Nouveau lead: ${name}\\n\"${message.substring(0, 60)}\"\\nAppeler: tel:${phone}`;\n} else {\n  ownerSms = `Nouveau lead: ${name}\\n\"${message.substring(0, 60)}\"\\nEmail: ${email}\\n(Pas de tel)`;\n}\n\nreturn [{\n  json: {\n    ...($input.first().json),\n    owner_sms: ownerSms.substring(0, 320)\n  }\n}];"
+        "jsCode": "// Notification dirigeant avec lien tel: pour rappel en 1 clic\nconst name = $json.name || 'Prospect';\nconst message = $json.message || '';\nconst phone = $json.phone || null;\nconst email = $json.email || 'non fourni';\n\nlet ownerSms;\nif (phone) {\n  ownerSms = `Nouveau lead: ${name}\\n\"${message.substring(0, 60)}\"\\nAppeler: tel:${phone}`;\n} else {\n  ownerSms = `Nouveau lead: ${name}\\n\"${message.substring(0, 60)}\"\\nEmail: ${email}\\n(Pas de tel)`;\n}\n\nconst ownerRequestSummary = ownerSms.substring(0, 320);\n\nreturn [{\n  json: {\n    ...($input.first().json),\n    owner_sms: ownerRequestSummary,\n    owner_request_summary: ownerRequestSummary\n  }\n}];"
       }
     },
     {
-      "id": "node-twilio-owner",
-      "name": "Twilio: SMS Dirigeant",
+      "id": "node-wa-owner",
+      "name": "WhatsApp: Message Dirigeant",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [2440, 300],
       "parameters": {
         "method": "POST",
-        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $env.TWILIO_ACCOUNT_SID }}/Messages.json",
+        "url": "=https://graph.facebook.com/v22.0/{{ $env.WA_PHONE_NUMBER_ID }}/messages",
         "authentication": "genericCredentialType",
-        "genericAuthType": "httpBasicAuth",
-        "sendBody": true,
-        "specifyBody": "keypair",
-        "bodyParameters": {
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
           "parameters": [
             {
-              "name": "To",
-              "value": "={{ $env.OWNER_PHONE }}"
-            },
-            {
-              "name": "From",
-              "value": "={{ $env.TWILIO_SENDER_ID }}"
-            },
-            {
-              "name": "Body",
-              "value": "={{ $json.owner_sms }}"
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WA_ACCESS_TOKEN }}"
             }
           ]
         },
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"messaging_product\": \"whatsapp\",\n  \"recipient_type\": \"individual\",\n  \"to\": \"{{ $env.OWNER_PHONE }}\",\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": \"lead_owner_notify_fr\",\n    \"language\": { \"code\": \"fr\" },\n    \"components\": [{\n      \"type\": \"body\",\n      \"parameters\": [\n        { \"type\": \"text\", \"text\": \"{{ $json.name }}\" },\n        { \"type\": \"text\", \"text\": \"{{ $json.owner_request_summary }}\" },\n        { \"type\": \"text\", \"text\": \"{{ $json.phone || $json.email }}\" }\n      ]\n    }]\n  }\n}",
         "options": {}
       }
     },
@@ -304,25 +291,28 @@
       }
     },
     {
-      "id": "node-twilio-followup",
-      "name": "Twilio: SMS Relance",
+      "id": "node-wa-followup",
+      "name": "WhatsApp: Message Relance",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [3320, 200],
       "parameters": {
         "method": "POST",
-        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $env.TWILIO_ACCOUNT_SID }}/Messages.json",
+        "url": "=https://graph.facebook.com/v22.0/{{ $env.WA_PHONE_NUMBER_ID }}/messages",
         "authentication": "genericCredentialType",
-        "genericAuthType": "httpBasicAuth",
-        "sendBody": true,
-        "specifyBody": "keypair",
-        "bodyParameters": {
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
           "parameters": [
-            { "name": "To", "value": "={{ $json.phone }}" },
-            { "name": "From", "value": "={{ $env.TWILIO_SENDER_ID }}" },
-            { "name": "Body", "value": "=Toujours disponible pour votre demande ? {{ $env.BUSINESS_NAME }} peut vous rappeler maintenant." }
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WA_ACCESS_TOKEN }}"
+            }
           ]
         },
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"messaging_product\": \"whatsapp\",\n  \"recipient_type\": \"individual\",\n  \"to\": \"{{ $json.phone }}\",\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": \"lead_followup_fr\",\n    \"language\": { \"code\": \"fr\" },\n    \"components\": [{\n      \"type\": \"body\",\n      \"parameters\": [\n        { \"type\": \"text\", \"text\": \"{{ $json.name.split(' ')[0] }}\" },\n        { \"type\": \"text\", \"text\": \"{{ $env.BUSINESS_NAME }}\" }\n      ]\n    }]\n  }\n}",
         "options": {}
       }
     },
@@ -341,29 +331,32 @@
       "typeVersion": 2,
       "position": [460, 600],
       "parameters": {
-        "jsCode": "// Recuperer le dernier lead depuis staticData et envoyer en fallback\nconst staticData = $getWorkflowStaticData('global');\nlet fallback = 'ERREUR Speed to Lead — pas de donnees lead disponibles.';\n\ntry {\n  if (staticData.lastLead) {\n    const lead = JSON.parse(staticData.lastLead);\n    const name = lead.name || lead.nom || 'Inconnu';\n    const phone = lead.phone || lead.tel || 'N/A';\n    const email = lead.email || 'N/A';\n    fallback = `ERREUR Speed to Lead\\nLead: ${name}\\nTel: ${phone}\\nEmail: ${email}\\nTraiter manuellement.`;\n  }\n} catch(e) {\n  fallback = `ERREUR Speed to Lead — donnees corrompues: ${staticData.lastLead?.substring(0, 80)}`;\n}\n\nreturn [{ json: { fallback_sms: fallback.substring(0, 320) } }];"
+        "jsCode": "// Recuperer le dernier lead depuis staticData et envoyer en fallback\nconst staticData = $getWorkflowStaticData('global');\nlet name = 'Inconnu';\nlet request = 'ERREUR Speed to Lead — pas de donnees lead disponibles.';\nlet phone = 'N/A';\n\ntry {\n  if (staticData.lastLead) {\n    const lead = JSON.parse(staticData.lastLead);\n    name = lead.name || lead.nom || 'Inconnu';\n    phone = lead.phone || lead.tel || 'N/A';\n    const email = lead.email || 'N/A';\n    request = `Tel: ${phone} | Email: ${email} | Traiter manuellement.`;\n  }\n} catch(e) {\n  request = `Donnees corrompues: ${staticData.lastLead?.substring(0, 80)}`;\n}\n\nreturn [{ json: { name, request, phone } }];"
       }
     },
     {
       "id": "node-error-sms",
-      "name": "Twilio: SMS Fallback Dirigeant",
+      "name": "WhatsApp: Fallback Dirigeant",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [680, 600],
       "parameters": {
         "method": "POST",
-        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $env.TWILIO_ACCOUNT_SID }}/Messages.json",
+        "url": "=https://graph.facebook.com/v22.0/{{ $env.WA_PHONE_NUMBER_ID }}/messages",
         "authentication": "genericCredentialType",
-        "genericAuthType": "httpBasicAuth",
-        "sendBody": true,
-        "specifyBody": "keypair",
-        "bodyParameters": {
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
           "parameters": [
-            { "name": "To", "value": "={{ $env.OWNER_PHONE }}" },
-            { "name": "From", "value": "={{ $env.TWILIO_SENDER_ID }}" },
-            { "name": "Body", "value": "={{ $json.fallback_sms }}" }
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WA_ACCESS_TOKEN }}"
+            }
           ]
         },
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={\n  \"messaging_product\": \"whatsapp\",\n  \"recipient_type\": \"individual\",\n  \"to\": \"{{ $env.OWNER_PHONE }}\",\n  \"type\": \"template\",\n  \"template\": {\n    \"name\": \"lead_error_notify_fr\",\n    \"language\": { \"code\": \"fr\" },\n    \"components\": [{\n      \"type\": \"body\",\n      \"parameters\": [\n        { \"type\": \"text\", \"text\": \"{{ $json.name }}\" },\n        { \"type\": \"text\", \"text\": \"{{ $json.request }}\" },\n        { \"type\": \"text\", \"text\": \"{{ $json.phone }}\" }\n      ]\n    }]\n  }\n}",
         "options": {}
       }
     }
@@ -398,20 +391,20 @@
     },
     "IF: Phone Available?": {
       "main": [
-        [{ "node": "Twilio: SMS Prospect", "type": "main", "index": 0 }],
+        [{ "node": "WhatsApp: Message Prospect", "type": "main", "index": 0 }],
         [{ "node": "Brevo: Email Prospect", "type": "main", "index": 0 }]
       ]
     },
-    "Twilio: SMS Prospect": {
+    "WhatsApp: Message Prospect": {
       "main": [[{ "node": "Code: Format Owner SMS", "type": "main", "index": 0 }]]
     },
     "Brevo: Email Prospect": {
       "main": [[{ "node": "Code: Format Owner SMS", "type": "main", "index": 0 }]]
     },
     "Code: Format Owner SMS": {
-      "main": [[{ "node": "Twilio: SMS Dirigeant", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "WhatsApp: Message Dirigeant", "type": "main", "index": 0 }]]
     },
-    "Twilio: SMS Dirigeant": {
+    "WhatsApp: Message Dirigeant": {
       "main": [[{ "node": "Wait: Follow-up Delay", "type": "main", "index": 0 }]]
     },
     "Wait: Follow-up Delay": {
@@ -422,7 +415,7 @@
     },
     "IF: Business Hours?": {
       "main": [
-        [{ "node": "Twilio: SMS Relance", "type": "main", "index": 0 }],
+        [{ "node": "WhatsApp: Message Relance", "type": "main", "index": 0 }],
         []
       ]
     },
@@ -430,16 +423,12 @@
       "main": [[{ "node": "Code: Format Fallback SMS", "type": "main", "index": 0 }]]
     },
     "Code: Format Fallback SMS": {
-      "main": [[{ "node": "Twilio: SMS Fallback Dirigeant", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "WhatsApp: Fallback Dirigeant", "type": "main", "index": 0 }]]
     }
   },
   "settings": {
     "executionOrder": "v1",
     "saveManualExecutions": true
   },
-  "_setup_notes": {
-    "1_credentials": "Creer un credential 'HTTP Basic Auth' avec Username = votre TWILIO_ACCOUNT_SID et Password = votre TWILIO_AUTH_TOKEN. Le selectionner dans les 4 noeuds Twilio.",
-    "2_error_workflow": "Aller dans Settings > Error Workflow et selectionner ce meme workflow 'Speed to Lead'.",
-    "3_variables": "Configurer toutes les variables d'environnement listees dans le README avant d'activer le workflow."
-  }
+  "_setup_notes": "Post-import: Set env vars WA_PHONE_NUMBER_ID, WA_ACCESS_TOKEN, OWNER_PHONE, BUSINESS_NAME, CALLBACK_MINUTES, WEBHOOK_SECRET, ANTHROPIC_API_KEY, BREVO_API_KEY, BREVO_SENDER_EMAIL, FOLLOWUP_DELAY_MINUTES"
 }

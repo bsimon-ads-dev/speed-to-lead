@@ -5,7 +5,7 @@
 - n8n running locally: `n8n start` (port 5678 default)
 - Main workflow imported and OPEN (not activated) for webhook-test URL
 - OR workflow ACTIVATED for production webhook URL
-- Environment variables set: `GOOGLE_KEY`, `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `ANTHROPIC_API_KEY`
+- Environment variables set: `GOOGLE_KEY`, `WA_PHONE_NUMBER_ID`, `WA_ACCESS_TOKEN`, `ANTHROPIC_API_KEY`
 
 ## Quick Test Commands
 
@@ -40,7 +40,7 @@ GOOGLE_KEY=your_key ./tests/test-webhook.sh all
 |------|-----|-------------|
 | Test (workflow open) | http://localhost:5678/webhook-test/{slug} | Development — workflow does not need to be active |
 | Production (workflow active) | http://localhost:5678/webhook/{slug} | Deduplication testing — requires active workflow |
-| Railway production | https://{hostname}/webhook/{slug} | End-to-end with real Twilio/Claude |
+| Railway production | https://{hostname}/webhook/{slug} | End-to-end with real WhatsApp Cloud API/Claude |
 
 ## What to Verify After Each Plan Wave
 
@@ -56,12 +56,12 @@ GOOGLE_KEY=your_key ./tests/test-webhook.sh all
 
 ### After Plan 05 (AI + channel dispatch):
 - [ ] Claude node output visible in execution log — inspect `$json.content[0].text`
-- [ ] SMS arrives on test phone (requires real Twilio credentials)
+- [ ] WhatsApp message arrives on test phone (requires WhatsApp Cloud API credentials)
 - [ ] Email arrives in test inbox (email-only scenario, requires Brevo credentials)
 
 ### After Plan 06 (owner notification):
-- [ ] Baptiste's test phone receives owner SMS with tel: link
-- [ ] End-to-end timing: submit test → SMS on prospect phone in < 2 minutes
+- [ ] Dirigeant's test phone receives owner WhatsApp with tel: link
+- [ ] End-to-end timing: submit test → WhatsApp message on prospect phone in < 2 minutes
 
 ## Verifying NOTIF-04 (Error Fallback)
 
@@ -69,7 +69,7 @@ GOOGLE_KEY=your_key ./tests/test-webhook.sh all
 2. In main workflow Settings > Error Workflow: select "Speed to Lead — Error Handler"
 3. Temporarily break the Claude node (set wrong API key)
 4. Send happy-path test lead
-5. Baptiste's phone should receive fallback SMS within 30 seconds
+5. Dirigeant's phone should receive fallback WhatsApp message within 30 seconds
 6. Restore Claude API key after test
 
 ## Test Payload Structure Reference
@@ -114,8 +114,8 @@ Procedure:
 4. Save the workflow (keep it active or use webhook-test URL)
 5. Send a test lead: `GOOGLE_KEY=your_key ./tests/test-webhook.sh happy dupont-plomberie`
 6. Wait 1 minute
-7. Verify in n8n Executions view: the Core Workflow execution resumes after ~1 minute and reaches "HTTP Request: Twilio SMS (Follow-up)" (if current time is Mon-Sat 08:00-20:00 Paris)
-8. Verify the prospect test phone receives the follow-up SMS
+7. Verify in n8n Executions view: the Core Workflow execution resumes after ~1 minute and reaches "HTTP Request: WhatsApp Cloud API (Follow-up)" (if current time is Mon-Sat 08:00-20:00 Paris)
+8. Verify the prospect test phone receives the follow-up WhatsApp message
 9. RESTORE: change follow_up_delay_minutes back to 45 and save
 
 ### Business Hours Gate Test (NOTIF-03)
@@ -136,11 +136,11 @@ Option B — Verify execution log text:
 
 Verify that a misconfigured env var for Client A cannot cause sends on behalf of Client B:
 
-1. In n8n Settings, set MARTIN_TWILIO_SENDER_ID to an invalid value (e.g. "INVALID")
+1. In n8n Settings, set WA_PHONE_NUMBER_ID for Client B to an invalid value (e.g. "INVALID")
 2. Send a test lead to dupont-plomberie
-3. Verify the Dupont Plomberie execution completes normally (uses DUPONT_TWILIO_SENDER_ID)
-4. Verify the Cabinet Martin execution (if tested) would fail at Twilio SMS nodes — not silently use Dupont's credentials
-5. Restore MARTIN_TWILIO_SENDER_ID to its correct value
+3. Verify the Dupont Plomberie execution completes normally (uses correct WA credentials)
+4. Verify the Cabinet Martin execution (if tested) would fail at WhatsApp nodes — not silently use Dupont's credentials
+5. Restore WA_PHONE_NUMBER_ID to its correct value
 
 ### Phase 2 Acceptance Checklist
 
@@ -167,9 +167,9 @@ Run these checks before marking Phase 2 complete:
 
 ### Test 3-A: Circuit Breaker (SC-4)
 
-**What it tests:** More than 5 executions of the same lead_id within 10 minutes halts execution and sends alert SMS to Baptiste.
+**What it tests:** More than 5 executions of the same lead_id within 10 minutes halts execution and sends alert WhatsApp to dirigeant.
 
-**Prerequisite:** n8n running. Core Workflow activated. BAPTISTE_PHONE env var set. Circuit breaker nodes present in Core Workflow (Plan 03-01).
+**Prerequisite:** n8n running. Core Workflow activated. Dirigeant WhatsApp phone number configured. Circuit breaker nodes present in Core Workflow (Plan 03-01).
 
 **Note on staticData:** $getWorkflowStaticData('global') does NOT persist between manual (editor) test executions. The circuit breaker only fires across production webhook-triggered executions. Use the webhook URL (not webhook-test).
 
@@ -179,9 +179,9 @@ Run these checks before marking Phase 2 complete:
    for i in $(seq 1 7); do GOOGLE_KEY=your_key ./tests/test-webhook.sh happy dupont-plomberie; sleep 2; done
    (Replace your_key with DUPONT_GOOGLE_KEY value)
 3. Check n8n Executions view — executions 6 and 7 should show "circuit_breaker_tripped: true" in the circuit breaker Code node output
-4. Check Baptiste's phone — should receive alert SMS: "ALERTE circuit breaker: lead_id ... a declenche X executions en 10 min..."
+4. Check dirigeant's WhatsApp — should receive alert: "ALERTE circuit breaker: lead_id ... a declenche X executions en 10 min..."
 
-**Expected result:** Executions 1-5 proceed normally (prospect SMS sent). Execution 6+ is halted at circuit breaker with alert SMS to Baptiste.
+**Expected result:** Executions 1-5 proceed normally (prospect WhatsApp sent). Execution 6+ is halted at circuit breaker with alert WhatsApp to dirigeant.
 
 **RESTORE:** After test, wait for the 10-minute window to expire before running production tests, or manually clear staticData.circuitBreaker in n8n Settings > Workflow static data.
 

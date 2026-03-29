@@ -153,35 +153,16 @@
       }
     },
     {
-      "id": "node-twilio-prospect",
-      "name": "HTTP Request: Twilio SMS (Prospect)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
+      "id": "node-brevo-sms-prospect",
+      "name": "Brevo: Send SMS (Prospect)",
+      "type": "n8n-nodes-base.brevo",
+      "typeVersion": 1,
       "position": [2000, 180],
       "parameters": {
-        "method": "POST",
-        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $env.TWILIO_ACCOUNT_SID }}/Messages.json",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpBasicAuth",
-        "sendBody": true,
-        "specifyBody": "keypair",
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "To",
-              "value": "={{ $json.phone }}"
-            },
-            {
-              "name": "From",
-              "value": "={{ $env.TWILIO_SENDER_ID }}"
-            },
-            {
-              "name": "Body",
-              "value": "={{ $json.claude_message }}"
-            }
-          ]
-        },
-        "options": {}
+        "resource": "sms",
+        "operation": "send",
+        "phoneNumber": "={{ $json.phone }}",
+        "message": "={{ $json.claude_message }}"
       }
     },
     {
@@ -210,35 +191,16 @@
       }
     },
     {
-      "id": "node-twilio-owner",
-      "name": "HTTP Request: Twilio SMS (Owner)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
+      "id": "node-brevo-sms-owner",
+      "name": "Brevo: Send SMS (Owner)",
+      "type": "n8n-nodes-base.brevo",
+      "typeVersion": 1,
       "position": [2440, 180],
       "parameters": {
-        "method": "POST",
-        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $env.TWILIO_ACCOUNT_SID }}/Messages.json",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpBasicAuth",
-        "sendBody": true,
-        "specifyBody": "keypair",
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "To",
-              "value": "={{ $env.OWNER_PHONE }}"
-            },
-            {
-              "name": "From",
-              "value": "={{ $env.TWILIO_SENDER_ID }}"
-            },
-            {
-              "name": "Body",
-              "value": "={{ $json.owner_sms }}"
-            }
-          ]
-        },
-        "options": {}
+        "resource": "sms",
+        "operation": "send",
+        "phoneNumber": "={{ $env.OWNER_PHONE }}",
+        "message": "={{ $json.owner_sms }}"
       }
     }
   ],
@@ -272,18 +234,18 @@
     },
     "IF: phone available?": {
       "main": [
-        [{ "node": "HTTP Request: Twilio SMS (Prospect)", "type": "main", "index": 0 }],
+        [{ "node": "Brevo: Send SMS (Prospect)", "type": "main", "index": 0 }],
         [{ "node": "Brevo: Send Email (Prospect)", "type": "main", "index": 0 }]
       ]
     },
-    "HTTP Request: Twilio SMS (Prospect)": {
+    "Brevo: Send SMS (Prospect)": {
       "main": [[{ "node": "Code: Format Owner Notification", "type": "main", "index": 0 }]]
     },
     "Brevo: Send Email (Prospect)": {
       "main": [[{ "node": "Code: Format Owner Notification", "type": "main", "index": 0 }]]
     },
     "Code: Format Owner Notification": {
-      "main": [[{ "node": "HTTP Request: Twilio SMS (Owner)", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "Brevo: Send SMS (Owner)", "type": "main", "index": 0 }]]
     }
   },
   "settings": {

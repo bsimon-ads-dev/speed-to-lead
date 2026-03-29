@@ -43,7 +43,7 @@ curl -s -w "\nHTTP %{http_code}\n" \
   -H "Content-Type: application/json" \
   -H "X-Webhook-Secret: ${SECRET}" \
   -d @tests/payloads/wordpress-lead.json
-echo "(Le prospect ne doit PAS recevoir un 2e SMS)"
+echo "(Le prospect ne doit PAS recevoir un 2e message WhatsApp)"
 echo ""
 
 echo "=== Tests termines ==="

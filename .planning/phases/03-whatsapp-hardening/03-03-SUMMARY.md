@@ -116,3 +116,10 @@ UptimeRobot setup (Task 2 checkpoint) requires Baptiste to complete manually —
 ---
 *Phase: 03-whatsapp-hardening*
 *Completed: 2026-03-28*
+
+## Self-Check: PASSED
+
+- FOUND: tests/TESTING.md (Phase 3 section added with 77 insertions)
+- FOUND: .planning/phases/03-whatsapp-hardening/03-03-SUMMARY.md
+- FOUND: commit 09a31cc (feat: add Phase 3 test procedures to TESTING.md)
+- FOUND: commit e904063 (docs: complete Phase 3 monitoring plan metadata)

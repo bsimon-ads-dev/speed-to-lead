@@ -110,6 +110,18 @@ None - no external service configuration required by this plan. WhatsApp onboard
 - Core Workflow circuit breaker is live — all incoming executions pass through the 10-min/5-threshold gate
 - Plan 03 (monitoring + Anthropic spend cap) has no blockers from this plan
 
+## Self-Check: PASSED
+
+- config/dupont-plomberie.json: FOUND
+- config/cabinet-martin.json: FOUND
+- workflows/speed-to-lead-core.json: FOUND
+- .planning/phases/03-whatsapp-hardening/03-01-SUMMARY.md: FOUND
+- Commit 20e0a8c (feat: WhatsApp config fields): FOUND
+- Commit 62b2080 (feat: circuit breaker nodes): FOUND
+- All JSON files validated via `node -e "require(...)"`: PASS
+- Circuit breaker verification script: PASS
+- WhatsApp config fields verification script: PASS
+
 ---
 *Phase: 03-whatsapp-hardening*
 *Completed: 2026-03-28*
